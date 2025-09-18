@@ -25,7 +25,7 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 # Copy nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf
 
-# Expose port 8080
+# Expose port 3000
 EXPOSE 3000
 
 # Health check
