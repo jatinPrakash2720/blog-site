@@ -10,7 +10,6 @@ import { OTPVerificationPage as OTPVerificationFeature } from "@/components/feat
 import { RestorePassword } from "@/components/features/auth/RestorePassword";
 import { useAuth } from "@/store/auth";
 import AuthLayout from "@/components/layout/AuthLayout";
-import type { Testimonial } from "@/types/components/features/auth";
 import type { RegisterData } from "@/types/api";
 
 export type AuthMode =

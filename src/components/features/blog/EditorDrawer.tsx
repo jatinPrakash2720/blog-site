@@ -16,10 +16,8 @@ import {
   X,
   Undo,
   Redo,
-  Minimize,
 } from "lucide-react";
 import { useEditorContextSafe } from "@/store/editor";
-import { cn } from "@/lib/utils";
 
 interface EditorDrawerProps {
   isOpen: boolean;

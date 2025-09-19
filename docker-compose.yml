@@ -4,7 +4,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: blog-site-backend
+    container_name: blog-site-frontend
     ports:
       - "3000:3000"
     environment:

@@ -1,7 +1,5 @@
 import React from "react";
-import { Outlet, useNavigate } from "react-router-dom";
-import ThemeToggle from "../common/wrappers/ThemeToggle";
-import { X } from "lucide-react";
+import { Outlet } from "react-router-dom";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -14,10 +12,7 @@ interface MainLayoutProps {
  */
  
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
-  const navigate = useNavigate();
-  const handleClose = () => {
-    navigate("/home");
-  };
+  
   return (
     <div>
       {/* The main page content (e.g., HomePage) is rendered here. */}

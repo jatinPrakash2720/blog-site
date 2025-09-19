@@ -506,7 +506,7 @@ const Header: React.FC<HeaderProps> = ({
 // Logo component from the prompt
 const Logo = ({ className }: { className?: string }) => {
   return (
-    <div className="flex items-center space-x-2">
+    <div className={`flex items-center space-x-2 ${className} `}>
       <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#9B99FE] to-[#2BC8B7] flex items-center justify-center">
         <span className="font-bold text-sm text-white">BL</span>
       </div>

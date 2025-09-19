@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useBlogs } from "@/store/blog";
-import { useAuth } from "@/store/auth";
+// import { useAuth } from "@/store/auth";
 import { SimpleEditor } from "@/components/tiptap-templates/simple/simple-editor";
 import { EditorDrawer } from "@/components/features/blog/EditorDrawer";
 import {
@@ -31,7 +31,7 @@ const EditorPage: React.FC<EditorPageProps> = ({ isStandalone = false }) => {
   const [createdBlog, setCreatedBlog] = useState<Blog | null>(null);
 
   const { initiateBlogCreation, updateBlogDetailsAction, loading } = useBlogs();
-  const { currentUser } = useAuth();
+  // const { currentUser } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { title, content } = useEditorContextSafe();
@@ -167,8 +167,8 @@ const EditorPage: React.FC<EditorPageProps> = ({ isStandalone = false }) => {
           initialContent={content}
           isEditable={view !== "preview-fullscreen"}
           isFullscreenMode={true}
-          onSave={handleSave}
-          onPreview={handlePreview}
+          // onSave={handleSave}
+          // onPreview={handlePreview}
           onBackToEditor={handleBackToEditor}
         />
       </>

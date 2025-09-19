@@ -4,7 +4,7 @@ import * as React from "react";
 import { Editor, isTextSelection } from "@tiptap/core";
 import { BubbleMenu } from "@tiptap/react/menus";
 import { EditorState } from "prosemirror-state";
-import { cn } from "@/lib/utils";
+// import { cn } from "@/lib/utils";
 // import {
 //   DropdownMenu,
 //   DropdownMenuContent,
@@ -26,20 +26,20 @@ interface EditorBubbleMenuProps {
   editor: Editor | null;
   onHighlighterClick: () => void;
   onLinkClick: () => void;
-  onGoBack: () => void;
+  // onGoBack: () => void;
   isMobile: boolean;
-  onSave: () => void;
-  onPreview: () => void;
+  // onSave: () => void;
+  // onPreview: () => void;
 }
 
 export const EditorBubbleMenu: React.FC<EditorBubbleMenuProps> = ({
   editor,
   onHighlighterClick,
   onLinkClick,
-  onGoBack,
+  // onGoBack,
   isMobile,
-  onSave,
-  onPreview,
+  // onSave,
+  // onPreview,
 }) => {
   if (!editor) return null;
 
