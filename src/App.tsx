@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 
 import MainLayout from "./components/layout/MainLayout";
 import PublicRoute from "./components/features/route/PublicRoute";
@@ -6,7 +6,7 @@ import PrivateRoute from "./components/features/route/PrivateRoute";
 import { EditorProvider } from "./store/editor";
 
 import HomePage from "./pages/HomePage";
-import UserProfilePage from "./pages/UserProfilePage";
+// import UserProfilePage from "./pages/UserProfilePage";
 import EditorPage from "./pages/EditorPage";
 import AuthPage from "./pages/AuthPage";
 import Loader from "./components/ui/Loader";
@@ -50,7 +50,7 @@ function App() {
                 }
               />
 
-              <Route
+              {/* <Route
                 path="/profile"
                 element={
                   <PrivateRoute>
@@ -68,7 +68,7 @@ function App() {
                     </PrivateRoute>
                   }
                 />
-              </Route>
+              </Route> */}
             </Routes>
           </EditorProvider>
         }

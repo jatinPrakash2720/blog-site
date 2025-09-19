@@ -43,22 +43,22 @@ import "@/components/tiptap-templates/simple/simple-editor.scss";
 import { BubbleMenu as BubbleMenuExtension } from "@tiptap/extension-bubble-menu";
 import { EditorBubbleMenu } from "@/components/features/blog/BubbleMenu";
 
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/store/auth";
+// import { useNavigate } from "react-router-dom";
+// import { useAuth } from "@/store/auth";
 import { Button as WrapperButton } from "@/components/common/wrappers/Button";
 import { cn } from "@/lib/utils";
-import { useEditorContext, useEditorContextSafe } from "@/store/editor";
+import {  useEditorContextSafe } from "@/store/editor";
 
 interface SimpleEditorProps {
-  onSave?: (content: object) => void;
-  onPreview?: (currentContent: object) => void;
+  // onSave?: (content: object) => void;
+  // onPreview?: (currentContent: object) => void;
   onBackToEditor?: () => void;
   initialContent?: string;
   isEditable?: boolean;
   isDrawerMode?: boolean;
   isFullscreenMode?: boolean;
-  onFullscreen?: () => void;
-  onExitFullscreen?: () => void;
+  // onFullscreen?: () => void;
+  // onExitFullscreen?: () => void;
 }
 
 // Header for preview mode (non-fullscreen)
@@ -84,15 +84,15 @@ const PreviewHeader: React.FC<{ onBackToEditor?: () => void }> = ({
 );
 
 export function SimpleEditor({
-  onSave,
-  onPreview,
+  // onSave,
+  // onPreview,
   onBackToEditor,
   initialContent,
   isEditable = true,
   isDrawerMode = false,
   isFullscreenMode = false,
-  onFullscreen,
-  onExitFullscreen,
+  // onFullscreen,
+  // onExitFullscreen,
 }: SimpleEditorProps) {
   const { setEditor, setContent, setWordCount, title, setTitle } =
     useEditorContextSafe();
@@ -100,9 +100,9 @@ export function SimpleEditor({
   const [mobileView, setMobileView] = React.useState<
     "main" | "highlighter" | "link"
   >("main");
-  const navigate = useNavigate();
-  const { currentUser } = useAuth();
-  const handleGoBack = () => navigate(-1);
+  // const navigate = useNavigate();
+  // const { currentUser } = useAuth();
+  // const handleGoBack = () => navigate(-1);
 
   const editor = useEditor({
     editable: isEditable,
@@ -163,16 +163,16 @@ export function SimpleEditor({
     return () => setEditor(null);
   }, [editor, setEditor]);
 
-  const handleSave = () => {
-    console.log("SimpleEditor handleSave called");
-    onSave?.(editor?.getJSON() || {});
-  };
+  // const handleSave = () => {
+  //   console.log("SimpleEditor handleSave called");
+  //   onSave?.(editor?.getJSON() || {});
+  // };
 
-  const handlePreview = () => {
-    console.log("SimpleEditor handlePreview called");
-    if (!editor || !currentUser) return;
-    onPreview?.(editor.getJSON());
-  };
+  // const handlePreview = () => {
+  //   console.log("SimpleEditor handlePreview called");
+  //   if (!editor || !currentUser) return;
+  //   onPreview?.(editor.getJSON());
+  // };
 
   React.useEffect(() => {
     if (!isMobile && mobileView !== "main") {
@@ -217,10 +217,10 @@ export function SimpleEditor({
                   editor={editor}
                   onHighlighterClick={() => setMobileView("highlighter")}
                   onLinkClick={() => setMobileView("link")}
-                  onGoBack={handleGoBack}
+                  // onGoBack={handleGoBack}
                   isMobile={isMobile}
-                  onSave={handleSave}
-                  onPreview={handlePreview}
+                  // onSave={handleSave}
+                  // onPreview={handlePreview}
                 />
               )}
 
@@ -241,10 +241,10 @@ export function SimpleEditor({
               editor={editor}
               onHighlighterClick={() => setMobileView("highlighter")}
               onLinkClick={() => setMobileView("link")}
-              onGoBack={handleGoBack}
+              // onGoBack={handleGoBack}
               isMobile={isMobile}
-              onSave={handleSave}
-              onPreview={handlePreview}
+              // onSave={handleSave}
+              // onPreview={handlePreview}
             />
           )}
 
