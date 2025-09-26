@@ -6,14 +6,20 @@ import { configurePassport } from "./utils/passport.util.js";
 
 const app = express();
 
-// Dynamic CORS handling for development
+// Dynamic CORS handling for development and production
 const allowedOrigins = process.env.CORS_ORIGIN
   ? process.env.CORS_ORIGIN.split(",")
-  : ["http://localhost:3000", "http://192.168.29.109:3000"];
+  : [
+      "http://localhost:3000",
+      "http://192.168.29.109:3000",
+      "http://34.69.58.115",
+    ];
 
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN.split(",")[0],
+    origin: process.env.CORS_ORIGIN
+      ? process.env.CORS_ORIGIN.split(",")[0]
+      : "http://34.69.58.115",
     credentials: true,
   })
 );
