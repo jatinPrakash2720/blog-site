@@ -1,16 +1,17 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom"
 
-import MainLayout from "./components/layout/MainLayout";
-import PublicRoute from "./components/features/route/PublicRoute";
-import PrivateRoute from "./components/features/route/PrivateRoute";
-import { EditorProvider } from "./store/editor";
+import MainLayout from "./components/layout/MainLayout"
+import PublicRoute from "./components/features/route/PublicRoute"
+import PrivateRoute from "./components/features/route/PrivateRoute"
+import { EditorProvider } from "./store/editor"
 
-import HomePage from "./pages/HomePage";
+import HomePage from "./pages/HomePage"
 // import UserProfilePage from "./pages/UserProfilePage";
-import EditorPage from "./pages/EditorPage";
-import AuthPage from "./pages/AuthPage";
-import Loader from "./components/ui/Loader";
-import LandingPage from "./pages/LandingPage";
+import UserProfilePage from "./pages/UserProfilePage"
+import EditorPage from "./pages/EditorPage"
+import AuthPage from "./pages/AuthPage"
+import Loader from "./components/ui/Loader"
+import LandingPage from "./pages/LandingPage"
 
 function App() {
   return (
@@ -30,16 +31,7 @@ function App() {
                     </MainLayout>
                   </PrivateRoute>
                 }
-              >
-                <Route
-                  path="write"
-                  element={
-                    <PrivateRoute>
-                      <EditorPage />
-                    </PrivateRoute>
-                  }
-                />
-              </Route>
+              />
 
               <Route
                 path="/editor"
@@ -49,6 +41,18 @@ function App() {
                   </PrivateRoute>
                 }
               />
+
+              {/* New User Profile Page with YouTube-style sidebar */}
+              <Route
+                path="/profile"
+                element={
+                  <PrivateRoute>
+                    <UserProfilePage />
+                  </PrivateRoute>
+                }
+              />
+
+              {/* Demo page for UserProfilePageNew */}
 
               {/* <Route
                 path="/profile"
@@ -146,7 +150,7 @@ function App() {
       <Route path="/auth/google/callback" element={<Loader />} />
       <Route path="/auth/github/callback" element={<Loader />} />
     </Routes>
-  );
+  )
 }
 
-export default App;
+export default App

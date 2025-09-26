@@ -13,15 +13,15 @@ export default defineConfig({
     },
   },
   server: {
-    host: "localhost",
+    host: "34.69.58.115",
     port: 3000,
     proxy: {
       "/api": {
-        target: "http://localhost:8080",
+        target: "http://34.69.58.115:8080",
         changeOrigin: true,
         secure: false,
       },
     },
     strictPort: true,
   },
-});
+})

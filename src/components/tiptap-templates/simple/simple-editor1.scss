@@ -1,0 +1,342 @@
+// Import Google Fonts for the editor
+// DM Sans: Used for the main editor content
+// Inter: Used for the overall UI elements
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
+
+// CSS Custom Properties (Variables) for theming
+// These variables control the editor's appearance and can be overridden
+body {
+  // --tt-toolbar-height: 44px; // Height of the editor toolbar
+  --tt-theme-text: var(
+    --tt-gray-light-900
+  ); // Default text color for light theme
+
+  // Dark theme text color override
+  .dark & {
+    --tt-theme-text: var(--tt-gray-dark-900);
+  }
+}
+
+// Global body styles for the editor
+body {
+  font-family: "Inter", sans-serif; // UI font
+  color: var(--tt-theme-text); // Use theme-aware text color
+  font-optical-sizing: auto; // Better font rendering
+  font-weight: 400;
+  font-style: normal;
+  padding: 0;
+  overscroll-behavior-y: none; // Prevent overscroll behavior
+}
+
+// Commented out styles - potentially for future use or debugging
+// html,
+// body {
+//   overscroll-behavior-x: none;
+// }
+
+// html,
+// body,
+// #root,
+// #app {
+//   height: 100%;
+//   // background-color: var(--tt-bg-color);
+// }
+
+// Custom scrollbar styling for webkit browsers (Chrome, Safari, Edge)
+::-webkit-scrollbar {
+  width: 0.25rem; // Very thin scrollbar
+}
+
+// Custom scrollbar styling for Firefox
+* {
+  scrollbar-width: thin; // Thin scrollbar in Firefox
+  scrollbar-color: var(--tt-scrollbar-color) transparent; // Custom colors
+}
+
+// Scrollbar thumb (the draggable part) styling
+::-webkit-scrollbar-thumb {
+  background-color: var(--tt-scrollbar-color);
+  border-radius: 9999px; // Fully rounded
+}
+
+// Scrollbar track (the background) styling
+::-webkit-scrollbar-track {
+  background: transparent; // Invisible track
+}
+
+// Main editor content font styling
+// ProseMirror is the underlying editor framework used by TipTap
+.tiptap.ProseMirror {
+  font-family: "DM Sans", sans-serif; // Content font (different from UI font)
+}
+
+/* ===========================================
+   DEFAULT EDITOR WRAPPER STYLES
+   =========================================== */
+// Main container for the simple editor
+.simple-editor-wrapper {
+  width: 63.8vw; // Responsive width (63.8% of viewport width)
+  height: 65vh; // Responsive height (65% of viewport height)
+  overflow: auto; // Enable scrolling when content overflows
+  background-color: hsl(var(--background)); // Theme-aware background
+  display: flex;
+  flex-direction: column; // Stack children vertically
+
+  /* ===========================================
+     FULLSCREEN MODE OVERRIDES
+     =========================================== */
+  // When editor is in fullscreen mode
+  &.fullscreen-wrapper {
+    widows: 100vw; // Full viewport width
+    height: 100vh; // Full viewport height
+    position: fixed; // Fixed positioning to cover entire viewport
+    top: 0;
+    left: 0;
+    z-index: 1000; // High z-index to appear above other content
+    border: none; // Remove any borders
+    display: flex; // Use flexbox for better control
+    flex-direction: column; // Stack header and content vertically
+    justify-content:center; // Start from top instead of center
+    align-items: center; // Center content horizontally
+    // Subtle gradient background for visual appeal
+    background: linear-gradient(
+      to bottom right,
+      hsl(var(--background)),
+      hsl(var(--background)),
+      hsl(var(--muted) / 0.2) // Slight accent with muted color
+    );
+    padding: 0; // Remove padding to allow full control
+    // Account for header height with extra spacing
+    padding-top: 100px; // Extra space below header (80px + 20px buffer)
+  }
+}
+
+/* ===========================================
+   EDITOR CONTENT CONTAINER
+   =========================================== */
+// Container that holds the actual editor content
+.simple-editor-content {
+  max-width: 648px; // Maximum width for optimal reading experience
+  width: 100%; // Full width up to max-width
+  margin: 0 auto; // Center horizontally
+  height: 100%; // Take full height of parent
+  display: flex;
+  flex-direction: column; // Stack children vertically
+  flex: 1; // Take available space
+}
+
+// Main editor area styling
+.simple-editor-content .tiptap.ProseMirror.simple-editor {
+  flex: 1; // Take remaining space
+  padding: 3rem 3rem 30vh; // Generous padding with extra bottom space for scrolling
+}
+
+/* ===========================================
+   MOBILE RESPONSIVE STYLES
+   =========================================== */
+// Adjust padding for mobile devices (screens smaller than 480px)
+@media screen and (max-width: 480px) {
+  .simple-editor-content .tiptap.ProseMirror.simple-editor {
+    padding: 1rem 1.5rem 30vh; // Reduced padding for mobile
+  }
+}
+
+/* ===========================================
+   DRAWER CONTENT VARIANT
+   =========================================== */
+// Special styling when editor is used in a drawer/modal context
+.simple-editor-content {
+  &.drawer-content {
+    max-height: 400px; // Limit height for drawer
+    overflow-y: auto; // Enable vertical scrolling
+
+    // Editor styling within drawer
+    .simple-editor {
+      min-height: 300px; // Minimum height to maintain usability
+      font-size: 14px; // Smaller font for compact display
+
+      // Scaled down heading sizes for drawer context
+      h1 {
+        font-size: 1.5rem; // Smaller than default
+      }
+      h2 {
+        font-size: 1.25rem; // Smaller than default
+      }
+      h3 {
+        font-size: 1.125rem; // Smaller than default
+      }
+
+      // Reduced paragraph spacing for compact display
+      p {
+        margin-bottom: 0.75rem; // Tighter spacing
+      }
+    }
+  }
+}
+
+/* ===========================================
+   FULLSCREEN EDITOR CONTAINER
+   =========================================== */
+// Main container for the fullscreen editor mode
+.fullscreen-editor-container {
+  max-width: 70%; // Maximum 70% of viewport width
+  width: 100%; // Full width up to max-width
+  background: hsl(var(--background)); // Theme-aware background
+  border-radius: 1rem; // Rounded corners
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); // Elegant shadow
+  border: 1px solid hsl(var(--border) / 0.5); // Subtle border
+  overflow: hidden; // Hide overflowing content
+  min-height: calc(100vh - 180px); // Height minus header space and padding
+  max-height: calc(100vh - 180px); // Prevent overflow
+  display: flex;
+  flex-direction: column; // Stack children vertically
+  margin: 0 auto; // Center horizontally
+  // Remove flex: 1 since we're centering with justify-content
+}
+
+// Title section within fullscreen editor
+.fullscreen-title-section {
+  padding: 2rem 2rem 1rem; // Generous padding
+  border-bottom: 1px solid hsl(var(--border) / 0.3); // Subtle bottom border
+}
+
+/* ===========================================
+   FULLSCREEN EDITOR CONTENT STYLES
+   =========================================== */
+// Main content area for fullscreen editor
+.fullscreen-editor-content {
+  flex: 1; // Take remaining space
+
+  // Fullscreen editor styling
+  .tiptap.ProseMirror.simple-editor {
+    min-height: 500px; // Minimum height for comfortable editing
+    padding: 3rem; // Generous padding
+    font-size: 18px; // Larger font for better readability
+    line-height: 1.7; // Comfortable line spacing
+    color: hsl(var(--foreground)); // Theme-aware text color
+    width: 100%; // Full width
+
+    // Remove default focus outline
+    &:focus {
+      outline: none;
+    }
+
+    /* ===========================================
+       TYPOGRAPHY STYLES
+       =========================================== */
+    // Main heading (H1)
+    h1 {
+      font-size: 2.5rem; // Large heading
+      font-weight: 700; // Bold
+      line-height: 1.2; // Tight line spacing
+      margin: 2rem 0 1.5rem; // Generous vertical spacing
+      color: hsl(var(--foreground)); // Theme-aware color
+    }
+
+    // Secondary heading (H2)
+    h2 {
+      font-size: 2rem; // Medium-large heading
+      font-weight: 600; // Semi-bold
+      line-height: 1.3; // Slightly looser than H1
+      margin: 1.8rem 0 1.2rem; // Good vertical spacing
+      color: hsl(var(--foreground)); // Theme-aware color
+    }
+
+    // Tertiary heading (H3)
+    h3 {
+      font-size: 1.5rem; // Medium heading
+      font-weight: 600; // Semi-bold
+      line-height: 1.4; // Comfortable line spacing
+      margin: 1.5rem 0 1rem; // Moderate vertical spacing
+      color: hsl(var(--foreground)); // Theme-aware color
+    }
+
+    // Paragraph styling
+    p {
+      margin-bottom: 1.5rem; // Good paragraph spacing
+      color: hsl(var(--foreground)); // Theme-aware color
+    }
+
+    // Blockquote styling
+    blockquote {
+      border-left: 4px solid hsl(var(--primary)); // Colored left border
+      padding-left: 1.5rem; // Left padding for content
+      margin: 2rem 0; // Vertical spacing
+      font-style: italic; // Italic text
+      color: hsl(var(--muted-foreground)); // Muted text color
+    }
+
+    // List styling
+    ul,
+    ol {
+      margin: 1.5rem 0; // Vertical spacing
+      padding-left: 2rem; // Indentation
+    }
+
+    // List item styling
+    li {
+      margin-bottom: 0.5rem; // Spacing between list items
+    }
+
+    // Inline code styling
+    code {
+      background: hsl(var(--muted)); // Muted background
+      padding: 0.2rem 0.4rem; // Small padding
+      border-radius: 0.25rem; // Rounded corners
+      font-size: 0.9em; // Slightly smaller font
+    }
+
+    // Code block styling
+    pre {
+      background: hsl(var(--muted)); // Muted background
+      padding: 1.5rem; // Generous padding
+      border-radius: 0.5rem; // Rounded corners
+      margin: 2rem 0; // Vertical spacing
+      overflow-x: auto; // Horizontal scrolling for long lines
+    }
+  }
+}
+
+/* ===========================================
+   TABLET RESPONSIVE STYLES (768px and below)
+   =========================================== */
+// Adjust styles for tablet and smaller screens
+@media screen and (max-width: 768px) {
+  // Fullscreen wrapper adjustments for tablets
+  .simple-editor-wrapper.fullscreen-wrapper {
+    padding-top: 80px; // Smaller header space on tablets (60px + 20px buffer)
+  }
+
+  // Fullscreen container adjustments for tablets
+  .fullscreen-editor-container {
+    max-width: 90%; // Wider on smaller screens
+    min-height: calc(100vh - 140px); // Adjusted for smaller header
+    max-height: calc(100vh - 140px); // Prevent overflow
+  }
+
+  // Title section adjustments
+  .fullscreen-title-section {
+    padding: 1.5rem 1.5rem 1rem; // Reduced padding
+  }
+
+  // Editor content adjustments for tablets
+  .fullscreen-editor-content {
+    .tiptap.ProseMirror.simple-editor {
+      padding: 2rem 1.5rem; // Reduced padding
+      font-size: 16px; // Smaller base font size
+
+      // Scaled down heading sizes for better mobile experience
+      h1 {
+        font-size: 2rem; // Reduced from 2.5rem
+      }
+
+      h2 {
+        font-size: 1.5rem; // Reduced from 2rem
+      }
+
+      h3 {
+        font-size: 1.25rem; // Reduced from 1.5rem
+      }
+    }
+  }
+}

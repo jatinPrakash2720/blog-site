@@ -1,7 +1,7 @@
-"use client";
+"use client"
 
-import { useState, useEffect, useRef } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useState, useEffect, useRef } from "react"
+import { Link, useNavigate, useLocation } from "react-router-dom"
 import {
   Menu,
   X,
@@ -16,11 +16,11 @@ import {
   Minimize,
   Undo,
   Redo,
-} from "lucide-react";
-import { useAuth } from "@/store/auth";
-import ThemeToggle from "@/components/common/wrappers/ThemeToggle";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+} from "lucide-react"
+import { useAuth } from "@/store/auth"
+import ThemeToggle from "@/components/common/wrappers/ThemeToggle"
+import { Button } from "@/components/ui/button"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,25 +28,25 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/common/wrappers/DropdownMenu";
-import { cn } from "@/lib/utils";
-import { useEditorContextSafe } from "@/store/editor";
+} from "@/components/common/wrappers/DropdownMenu"
+import { cn } from "@/lib/utils"
+import { useEditorContextSafe } from "@/store/editor"
 
 const menuItems = [
   { name: "Home", href: "/" },
   { name: "Blogs", href: "/blogs" },
   { name: "About", href: "/about" },
-];
+]
 
 interface HeaderProps {
-  onHeightChange?: (height: number) => void;
-  disableScrollEffect?: boolean;
-  isEditorMode?: boolean;
-  isPreviewMode?: boolean;
-  onSave?: () => void;
-  onPreview?: () => void;
-  onBackToEditor?: () => void;
-  onExitFullscreen?: () => void;
+  onHeightChange?: (height: number) => void
+  disableScrollEffect?: boolean
+  isEditorMode?: boolean
+  isPreviewMode?: boolean
+  onSave?: () => void
+  onPreview?: () => void
+  onBackToEditor?: () => void
+  isVisible?: boolean
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -57,95 +57,109 @@ const Header: React.FC<HeaderProps> = ({
   onSave,
   onPreview,
   onBackToEditor,
-  onExitFullscreen,
+  isVisible = true,
 }) => {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [menuState, setMenuState] = useState(false);
-  const headerRef = useRef<HTMLDivElement>(null);
-  const navigate = useNavigate();
-  const location = useLocation();
+  const [isScrolled, setIsScrolled] = useState(false)
+  const [menuState, setMenuState] = useState(false)
+  const headerRef = useRef<HTMLDivElement>(null)
+  const navigate = useNavigate()
+  const location = useLocation()
 
-  const { isAuthenticated, currentUser, logout } = useAuth();
-  const { wordCount, editor } = useEditorContextSafe();
+  const { isAuthenticated, currentUser, logout } = useAuth()
+  const { wordCount, editor } = useEditorContextSafe()
 
   // Undo/Redo handlers
   const handleUndo = () => {
     if (editor) {
-      editor.chain().focus().undo().run();
+      editor.chain().focus().undo().run()
     }
-  };
+  }
 
   const handleRedo = () => {
     if (editor) {
-      editor.chain().focus().redo().run();
+      editor.chain().focus().redo().run()
     }
-  };
+  }
 
-  const showWriteButton = location.pathname === "/home" && !isEditorMode;
-  const writeUrl = `${location.pathname}/write`;
+  const showWriteButton = location.pathname === "/home" && !isEditorMode
+  const writeUrl = "/editor" // Direct to fullscreen editor
 
   // Debug handlers with visual feedback
   const handleSaveClick = () => {
-    console.log("Header Save button clicked");
-    onSave?.();
-  };
+    console.log("Header Save button clicked")
+    onSave?.()
+  }
 
   const handlePreviewClick = () => {
-    console.log("Header Preview button clicked, isPreviewMode:", isPreviewMode);
-    onPreview?.();
-  };
+    console.log("Header Preview button clicked, isPreviewMode:", isPreviewMode)
+    onPreview?.()
+  }
 
   const handleBackToEditorClick = () => {
-    console.log("Header Back to Editor button clicked");
-    onBackToEditor?.();
-  };
+    console.log("Header Back to Editor button clicked")
+    onBackToEditor?.()
+  }
 
   useEffect(() => {
     if (headerRef.current && onHeightChange) {
-      onHeightChange(headerRef.current.offsetHeight);
+      onHeightChange(headerRef.current.offsetHeight)
     }
-  }, [isScrolled, onHeightChange, menuState]);
+  }, [isScrolled, onHeightChange, menuState])
 
   useEffect(() => {
     if (disableScrollEffect || isEditorMode) {
-      setIsScrolled(true);
-      return;
+      setIsScrolled(true)
+      return
     }
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
-    };
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [disableScrollEffect, isEditorMode]);
+      setIsScrolled(window.scrollY > 50)
+    }
+    window.addEventListener("scroll", handleScroll, { passive: true })
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [disableScrollEffect, isEditorMode])
 
   const handleLogout = async () => {
-    await logout();
-    navigate("/auth/login");
-  };
+    await logout()
+    navigate("/auth/login")
+  }
 
   const getInitials = (name: string) => {
-    if (!name) return "";
+    if (!name) return ""
     return name
       .split(" ")
       .map((n) => n[0])
       .join("")
-      .toUpperCase();
-  };
+      .toUpperCase()
+  }
+
+  // Debug header visibility
+  console.log("Header isVisible:", isVisible, "isEditorMode:", isEditorMode)
 
   return (
     <header ref={headerRef}>
       <nav
         data-state={menuState ? "active" : "inactive"}
-        className="fixed z-20 w-full px-2 group"
+        className={cn(
+          "fixed w-full px-2 group transition-transform duration-300 ease-in-out",
+          isEditorMode ? "z-50 px-0" : "z-20 px-0", // Increase z-index for editor mode
+          isVisible ? "translate-y-0" : "-translate-y-full"
+        )}
       >
         <div
           className={cn(
-            "mx-auto mt-2 max-w-6xl px-6 transition-all duration-300 lg:px-12",
-            (isScrolled || isEditorMode) &&
-              "bg-background/50 max-w-4xl rounded-2xl border backdrop-blur-lg lg:px-5"
+            "mx-auto mt-2 max-w-7xl px-6 transition-all duration-300 lg:px-12",
+            isScrolled &&
+              "bg-background/50 max-w-5xl rounded-2xl border backdrop-blur-lg lg:px-5",
+            isEditorMode &&
+              "bg-background/50 mt-0 max-w-full p-0 rounded-none border-0 border-b-2 border-border/60 backdrop-blur-lg lg:px-5"
           )}
         >
-          <div className="relative flex flex-wrap items-center justify-between gap-6 py-3 lg:gap-0 lg:py-4">
+          <div
+            className={cn(
+              "relative flex flex-wrap items-center justify-between gap-6 py-4 px-4 lg:gap-0 lg:py-6 lg:px-6",
+              isEditorMode && "py-3 lg:py-4"
+            )}
+          >
             {/* Left side - Logo and word count for editor mode */}
             <div className="flex w-full justify-between lg:w-auto">
               <div className="flex items-center gap-4">
@@ -247,55 +261,42 @@ const Header: React.FC<HeaderProps> = ({
                 {isEditorMode && (
                   <div className="flex items-center gap-2">
                     {/* Editor-specific controls */}
-                    <div className="flex items-center gap-2 p-2 rounded-full bg-background/80 backdrop-blur-md border border-border shadow-lg">
-                      {isPreviewMode ? (
+                    {isPreviewMode ? (
+                      <Button
+                        onClick={handleBackToEditorClick}
+                        variant="ghost"
+                        size="icon"
+                        className="rounded-full h-10 w-10"
+                        title="Back to Editor"
+                      >
+                        <Edit className="w-5 h-5" />
+                      </Button>
+                    ) : (
+                      <>
                         <Button
-                          onClick={handleBackToEditorClick}
-                          variant="ghost"
+                          onClick={handleSaveClick}
                           size="icon"
                           className="rounded-full h-10 w-10"
-                          title="Back to Editor"
+                          title="Save & Publish"
                         >
-                          <Edit className="w-5 h-5" />
+                          <Save className="w-5 h-5" />
                         </Button>
-                      ) : (
-                        <>
-                          <Button
-                            onClick={handleSaveClick}
-                            size="icon"
-                            className="rounded-full h-10 w-10"
-                            title="Save & Publish"
-                          >
-                            <Save className="w-5 h-5" />
-                          </Button>
-                          <Button
-                            onClick={handlePreviewClick}
-                            variant="outline"
-                            size="icon"
-                            className={cn(
-                              "rounded-full h-10 w-10",
-                              isPreviewMode &&
-                                "bg-primary text-primary-foreground hover:bg-primary/90"
-                            )}
-                            title="Preview"
-                          >
-                            <Eye className="w-5 h-5" />
-                          </Button>
-                        </>
-                      )}
-                      <ThemeToggle className="rounded-full h-10 w-10" />
-                      {onExitFullscreen && (
                         <Button
-                          onClick={onExitFullscreen}
-                          variant="ghost"
+                          onClick={handlePreviewClick}
+                          variant="outline"
                           size="icon"
-                          className="rounded-full h-10 w-10"
-                          title="Exit Fullscreen"
+                          className={cn(
+                            "rounded-full h-10 w-10",
+                            isPreviewMode &&
+                              "bg-primary text-primary-foreground hover:bg-primary/90"
+                          )}
+                          title="Preview"
                         >
-                          <Minimize className="w-5 h-5" />
+                          <Eye className="w-5 h-5" />
                         </Button>
-                      )}
-                    </div>
+                      </>
+                    )}
+                    <ThemeToggle className="rounded-full h-10 w-10" />
 
                     {/* User controls - show in fullscreen mode */}
                     {isAuthenticated && currentUser && (
@@ -500,19 +501,19 @@ const Header: React.FC<HeaderProps> = ({
         </div>
       </nav>
     </header>
-  );
-};
+  )
+}
 
 // Logo component from the prompt
 const Logo = ({ className }: { className?: string }) => {
   return (
     <div className={`flex items-center space-x-2 ${className} `}>
-      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#9B99FE] to-[#2BC8B7] flex items-center justify-center">
+      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#000000] to-[#ffffff] flex items-center justify-center">
         <span className="font-bold text-sm text-white">BL</span>
       </div>
       <span className="font-semibold text-lg hidden sm:inline">BlogLikho</span>
     </div>
-  );
-};
+  )
+}
 
-export default Header;
+export default Header
