@@ -2,7 +2,7 @@ import axios from "axios"
 import { LocalStorage } from "./LocalStorage.ts"
 
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_SERVER_URI || "http://34.69.58.115/api/v1",
+  baseURL: import.meta.env.VITE_SERVER_URI || "/api/v1",
   withCredentials: true,
 })
 
