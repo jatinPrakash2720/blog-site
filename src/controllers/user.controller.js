@@ -112,52 +112,48 @@ const loginUser = asyncHandler(async (req, res) => {
   loggedinuser ki details bej denge
   aur cookies mein kr denge, with options
   */
-  try {
-    const { email, password } = req.body;
-    console.log(password);
-    if (!email) {
-      throw new ApiError(400, "email is required");
-    }
-    const user = await User.findOne({ email });
-    console.log(user);
-    if (!user) {
-      throw new ApiError(404, "User does not exists");
-    }
-    const isPasswordValid = await user.isPasswordCorrect(password);
-    console.log(isPasswordValid);
-    if (!isPasswordValid) {
-      throw new ApiError(401, "Invalid user credentials");
-    }
+   const { email, password } = req.body;
+   console.log(password);
+   if (!email) {
+     throw new ApiError(400, "email is required");
+   }
+   const user = await User.findOne({ email });
+   console.log(user);
+   if (!user) {
+     throw new ApiError(404, "User does not exists");
+   }
+   const isPasswordValid = await user.isPasswordCorrect(password);
+   console.log(isPasswordValid);
+   if (!isPasswordValid) {
+     throw new ApiError(401, "Invalid user credentials");
+   }
 
-    const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
-      user._id
-    );
-    const loggedInUser = await User.findById(user._id).select(
-      "-password -refreshToken"
-    );
+   const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
+     user._id
+   );
+   const loggedInUser = await User.findById(user._id).select(
+     "-password -refreshToken"
+   );
 
-    // const option = {
-    //   httpOnly: true,
-    //   secure: true,
-    // };
-    return res
-      .status(200)
-      .cookie("accessToken", accessToken, option)
-      .cookie("refreshToken", refreshToken, option)
-      .json(
-        new ApiResponse(
-          200,
-          {
-            user: loggedInUser,
-            accessToken: accessToken,
-            refreshToken: refreshToken,
-          },
-          "User logged in Successfully"
-        )
-      );
-  } catch (error) {
-    throw new ApiError(501, "Internal Error while signing");
-  }
+   // const option = {
+   //   httpOnly: true,
+   //   secure: true,
+   // };
+   return res
+     .status(200)
+     .cookie("accessToken", accessToken, option)
+     .cookie("refreshToken", refreshToken, option)
+     .json(
+       new ApiResponse(
+         200,
+         {
+           user: loggedInUser,
+           accessToken: accessToken,
+           refreshToken: refreshToken,
+         },
+         "User logged in Successfully"
+       )
+     );
 });
 const logoutUser = asyncHandler(async (req, res) => {
   try {
