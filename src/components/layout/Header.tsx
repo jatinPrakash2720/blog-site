@@ -13,7 +13,6 @@ import {
   Save,
   Eye,
   Edit,
-  Minimize,
   Undo,
   Redo,
 } from "lucide-react"

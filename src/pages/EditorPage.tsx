@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
-import { useNavigate, useLocation } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import { useBlogs } from "@/store/blog"
 // import { useAuth } from "@/store/auth";
 import { SimpleEditor } from "@/components/tiptap-templates/simple/simple-editor"
@@ -20,7 +20,7 @@ interface EditorPageProps {
   isStandalone?: boolean
 }
 
-const EditorPage: React.FC<EditorPageProps> = ({ isStandalone = false }) => {
+const EditorPage: React.FC<EditorPageProps> = () => {
   // isStandalone is kept for future use but not currently needed
   const [view, setView] = useState<EditorView>("fullscreen")
   const [createdBlog, setCreatedBlog] = useState<Blog | null>(null)

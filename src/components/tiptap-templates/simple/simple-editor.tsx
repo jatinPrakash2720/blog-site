@@ -431,7 +431,7 @@ export function SimpleEditor({
     }
 
     // Boundary constraints
-    const headerHeight = 100
+    // const headerHeight = 100
     const editorTop = 100 // Allow notes to go closer to header
     const minY = editorTop
     const maxY = window.innerHeight - 60 // Allow notes to go much closer to bottom
