@@ -1,3 +1,8 @@
+import dotenv from "dotenv";
+dotenv.config({
+  path: "./.env",
+});
+
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -15,7 +20,7 @@ const allowedOrigins = process.env.CORS_ORIGIN
       "http://34.69.58.115",
     ];
 
-    console.log(process.env.CORS_ORIGIN)
+console.log(process.env.CORS_ORIGIN);
 app.use(
   cors({
     origin: process.env.CORS_ORIGIN
