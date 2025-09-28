@@ -15,6 +15,7 @@ const allowedOrigins = process.env.CORS_ORIGIN
       "http://34.69.58.115",
     ];
 
+    console.log(process.env.CORS_ORIGIN)
 app.use(
   cors({
     origin: process.env.CORS_ORIGIN
