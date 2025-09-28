@@ -1,7 +1,7 @@
-import dotenv from "dotenv";
-dotenv.config({
-  path: "./.env",
-});
+// import dotenv from "dotenv";
+// dotenv.config({
+//   path: "./.env",
+// });
 
 import express from "express";
 import cors from "cors";
@@ -11,16 +11,6 @@ import { configurePassport } from "./utils/passport.util.js";
 
 const app = express();
 
-// Dynamic CORS handling for development and production
-const allowedOrigins = process.env.CORS_ORIGIN
-  ? process.env.CORS_ORIGIN.split(",")
-  : [
-      "http://localhost:3000",
-      "http://192.168.29.109:3000",
-      "http://34.69.58.115",
-    ];
-
-console.log(process.env.CORS_ORIGIN);
 app.use(
   cors({
     origin: process.env.CORS_ORIGIN
