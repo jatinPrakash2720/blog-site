@@ -4,12 +4,12 @@ import React, {
   useEffect,
   useState,
   useCallback,
-} from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import * as userService from "../services/user.service.ts";
-import Loader from "../components/ui/Loader.js";
-import { LocalStorage, requestHandler } from "../lib/index.ts";
-import type { IAuthContext, AuthProviderProps } from "../types/context.ts";
+} from "react"
+import { useLocation, useNavigate } from "react-router-dom"
+import * as userService from "../services/user.service.ts"
+import Loader from "../components/ui/Loader.js"
+import { LocalStorage, requestHandler } from "../lib/index.ts"
+import type { IAuthContext, AuthProviderProps } from "../types/context.ts"
 import type {
   ChangePasswordData,
   ForgotPasswordPayload,
@@ -17,55 +17,55 @@ import type {
   RegisterData,
   ResetPasswordPayload,
   User,
-} from "../types/api.ts";
+} from "../types/api.ts"
 
-const AuthContext = createContext<IAuthContext | undefined>(undefined);
+const AuthContext = createContext<IAuthContext | undefined>(undefined)
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
+  const context = useContext(AuthContext)
   if (!context) {
-    throw new Error("UseAuth must be used within an AuthProvider.");
+    throw new Error("UseAuth must be used within an AuthProvider.")
   }
-  return context;
-};
+  return context
+}
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isAuthReady, setIsAuthReady] = useState<boolean>(false);
-  const [viewedProfile, setViewedProfile] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null)
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
+  const [loading, setLoading] = useState<boolean>(true)
+  const [error, setError] = useState<string | null>(null)
+  const [isAuthReady, setIsAuthReady] = useState<boolean>(false)
+  const [viewedProfile, setViewedProfile] = useState<User | null>(null)
 
-  const navigate = useNavigate();
-  const location = useLocation();
+  const navigate = useNavigate()
+  const location = useLocation()
 
   const clearAuthState = useCallback(() => {
-    setCurrentUser(null);
-    setIsAuthenticated(false);
-    LocalStorage.remove("token");
-    LocalStorage.remove("user");
-  }, []);
+    setCurrentUser(null)
+    setIsAuthenticated(false)
+    LocalStorage.remove("token")
+    LocalStorage.remove("user")
+  }, [])
 
   const fetchCurrentUser = useCallback(async (): Promise<boolean> => {
-    let success = false;
+    let success = false
     await requestHandler(
       () => userService.getCurrentUser(),
       null,
       (response) => {
-        const user = response.data;
-        setCurrentUser(user);
-        setIsAuthenticated(true);
-        LocalStorage.set("user", user);
-        success = true;
+        const user = response.data
+        setCurrentUser(user)
+        setIsAuthenticated(true)
+        LocalStorage.set("user", user)
+        success = true
       },
       () => {
-        clearAuthState();
-        success = false;
+        clearAuthState()
+        success = false
       }
-    );
-    return success;
-  }, [clearAuthState]);
+    )
+    return success
+  }, [clearAuthState])
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -79,75 +79,79 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           () => userService.getCurrentUser(),
           null,
           (response) => {
-            const user = response.data;
+            const user = response.data
             // Extract token from cookies and save to localStorage
             const tokenFromCookie = document.cookie
               .split("; ")
               .find((row) => row.startsWith("accessToken="))
-              ?.split("=")[1];
+              ?.split("=")[1]
 
             // Extract token from URL params instead of cookies
-            const urlParams = new URLSearchParams(location.search);
-            const tokenFromUrl = urlParams.get("token");
+            const urlParams = new URLSearchParams(location.search)
+            const tokenFromUrl = urlParams.get("token")
 
             if (tokenFromUrl) {
-              LocalStorage.set("token", tokenFromUrl);
+              LocalStorage.set("token", tokenFromUrl)
             }
 
             if (tokenFromCookie) {
-              LocalStorage.set("token", tokenFromCookie);
+              LocalStorage.set("token", tokenFromCookie)
             }
 
-            setCurrentUser(user);
-            setIsAuthenticated(true);
-            LocalStorage.set("user", user);
-            navigate("/home");
+            setCurrentUser(user)
+            setIsAuthenticated(true)
+            LocalStorage.set("user", user)
+            navigate("/home")
           },
           () => {
-            navigate("/auth/login");
+            navigate("/auth/login")
           }
-        );
+        )
       } else {
         // 2. For ALL other page loads, restore from localStorage
-        const userFromStorage = LocalStorage.get("user") as User;
-        const token = LocalStorage.get("token");
-        console.log("here1");
+        const userFromStorage = LocalStorage.get("user") as User
+        const token = LocalStorage.get("token")
+        console.log("here1")
 
         if (userFromStorage && token) {
           // Restore user state from localStorage
-          setCurrentUser(userFromStorage);
-          setIsAuthenticated(true);
-          console.log("here2");
+          setCurrentUser(userFromStorage)
+          setIsAuthenticated(true)
+          console.log("here2")
 
           // Optional: Validate token in background (don't block UI)
           fetchCurrentUser().catch((error) => {
-            console.error("Background token validation failed:", error);
+            console.error("Background token validation failed:", error)
             // Only clear auth if it's definitely an auth error
             if (
               error.response?.status === 401 ||
               error.response?.status === 403
             ) {
-              clearAuthState();
+              clearAuthState()
             }
-          });
+          })
         }
       }
       // 3. Mark auth as ready only after the check is complete.
-      setIsAuthReady(true);
-    };
+      setIsAuthReady(true)
+    }
 
-    initializeAuth();
-  }, []);
+    initializeAuth()
+  }, [])
 
   const continueWithGoogle = () => {
-    const VITE_SERVER_URI = import.meta.env.VITE_SERVER_URI;
-    window.location.href = `${VITE_SERVER_URI}/users/google`;
-  };
+    // For OAuth, we need to redirect to the backend server, not through nginx proxy
+    const backendUrl =
+      import.meta.env.VITE_BACKEND_URL || "http://localhost:8080"
+    window.location.href = `${backendUrl}/api/v1/users/google`
+  }
 
   const continueWithGithub = () => {
-    const VITE_SERVER_URI = import.meta.env.VITE_SERVER_URI;
-    window.location.href = `${VITE_SERVER_URI}/users/github`;
-  };
+    // For OAuth, we need to redirect to the backend server, not through nginx proxy
+    const backendUrl =
+      import.meta.env.VITE_BACKEND_URL || "http://localhost:8080"
+    window.location.href = `${backendUrl}/api/v1/users/github`
+  }
 
   const login = useCallback(
     async (credentials: LoginCredentials) => {
@@ -155,12 +159,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         () => userService.loginUser(credentials),
         setLoading,
         (response) => {
-          const { user, accessToken } = response.data;
-          setCurrentUser(user);
-          setIsAuthenticated(true);
-          LocalStorage.set("token", accessToken);
-          LocalStorage.set("user", user);
-          navigate("/home");
+          const { user, accessToken } = response.data
+          setCurrentUser(user)
+          setIsAuthenticated(true)
+          LocalStorage.set("token", accessToken)
+          LocalStorage.set("user", user)
+          navigate("/home")
           // (response: { user: User; accessToken: string }) => {
           //   const { user, accessToken } = response;
           //   setCurrentUser(user);
@@ -170,10 +174,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           //   navigate("/");
         },
         setError
-      );
+      )
     },
     [navigate]
-  );
+  )
 
   const register = useCallback(
     async (userData: RegisterData) => {
@@ -183,15 +187,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         (response) => {
           // console.log(response);
           // console.log(response.data);
-          const newUser = response.data;
-          navigate("/auth/profile-setup", { state: { userId: newUser._id } });
-          console.log("here");
+          const newUser = response.data
+          navigate("/auth/profile-setup", { state: { userId: newUser._id } })
+          console.log("here")
         },
         setError
-      );
+      )
     },
     [navigate]
-  );
+  )
 
   const completeProfileSetup = useCallback(
     async (userId: string, imageData: FormData) => {
@@ -199,47 +203,47 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         () => userService.updateProfileImages(userId, imageData),
         setLoading,
         () => {
-          navigate("/auth/login");
+          navigate("/auth/login")
         },
         setError
-      );
+      )
     },
     [navigate]
-  );
+  )
 
   const logout = useCallback(async () => {
     await requestHandler(
       () => userService.logoutUser(),
       setLoading,
       () => {
-        clearAuthState(); // This now correctly clears localStorage
-        navigate("/auth/login");
+        clearAuthState() // This now correctly clears localStorage
+        navigate("/auth/login")
       },
       (error) => {
         // Even if the API call fails, clear the frontend state
-        clearAuthState();
-        navigate("/auth/login");
-        setError(error);
+        clearAuthState()
+        navigate("/auth/login")
+        setError(error)
       }
-    );
-  }, [navigate, clearAuthState]);
+    )
+  }, [navigate, clearAuthState])
 
   const refreshAuthToken = useCallback(async () => {
     await requestHandler(
       () => userService.refreshAccessToken(),
       setLoading,
       (response) => {
-        const { data } = response.data;
-        LocalStorage.set("token", data.accessToken);
-        fetchCurrentUser();
+        const { data } = response.data
+        LocalStorage.set("token", data.accessToken)
+        fetchCurrentUser()
       },
       (error) => {
-        setError(error);
-        clearAuthState();
-        navigate("/auth/login");
+        setError(error)
+        clearAuthState()
+        navigate("/auth/login")
       }
-    );
-  }, [navigate, clearAuthState, fetchCurrentUser]);
+    )
+  }, [navigate, clearAuthState, fetchCurrentUser])
 
   const changePassword = useCallback(
     async (passwordData: ChangePasswordData) => {
@@ -248,82 +252,82 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setLoading,
         () => {},
         setError
-      );
+      )
     },
     []
-  );
+  )
 
   const updateProfile = useCallback(
     async (updateData: FormData | { fullName?: string; email?: string }) => {
       const getApiCall = () => {
         if (updateData instanceof FormData) {
           if (updateData.has("avatar"))
-            return () => userService.updateUserAvatar(updateData);
+            return () => userService.updateUserAvatar(updateData)
           if (updateData.has("coverImage"))
-            return () => userService.updateUserCoverImage(updateData);
+            return () => userService.updateUserCoverImage(updateData)
         } else {
           if (updateData.fullName)
             return () =>
               userService.updateUserFullName({
                 fullName: updateData.fullName!,
-              });
+              })
           if (updateData.email)
             return () =>
-              userService.updateUserEmail({ email: updateData.email! });
+              userService.updateUserEmail({ email: updateData.email! })
         }
-        throw new Error("Invalid update data provided.");
-      };
+        throw new Error("Invalid update data provided.")
+      }
       await requestHandler(
         getApiCall() as () => Promise<any>,
         setLoading,
         (response: User | {}) => {
           if (response && "_id" in response) {
-            const updatedUser = response as User;
-            setCurrentUser(updatedUser);
-            LocalStorage.set("user", updatedUser);
+            const updatedUser = response as User
+            setCurrentUser(updatedUser)
+            LocalStorage.set("user", updatedUser)
           } else {
-            fetchCurrentUser();
+            fetchCurrentUser()
           }
         },
         setError
-      );
+      )
     },
     [fetchCurrentUser]
-  );
+  )
 
   const forgotPassword = useCallback(async (payload: ForgotPasswordPayload) => {
-    let success = false;
+    let success = false
     await requestHandler(
       () => userService.forgotPassword(payload),
       setLoading,
       () => {
-        success = true;
+        success = true
       },
       setError
-    );
-    return success;
-  }, []);
+    )
+    return success
+  }, [])
 
   const restorePassword = useCallback(
     async (token: string, payload: ResetPasswordPayload) => {
-      let success = false;
+      let success = false
       await requestHandler(
         () => userService.restorePassword(token, payload),
         setLoading,
         () => {
-          success = true;
-          navigate("/auth/login");
+          success = true
+          navigate("/auth/login")
         },
         setError
-      );
-      return success;
+      )
+      return success
     },
     [navigate]
-  );
+  )
 
   const clearAuthError = useCallback(() => {
-    setError(null);
-  }, []);
+    setError(null)
+  }, [])
 
   const fetchUserProfile = useCallback(async (username: string) => {
     await requestHandler(
@@ -331,11 +335,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setLoading,
       (response) => {
         // The requestHandler gives us the full API response
-        setViewedProfile(response.data);
+        setViewedProfile(response.data)
       },
       setError
-    );
-  }, []);
+    )
+  }, [])
 
   const contextValue: IAuthContext = {
     currentUser,
@@ -358,13 +362,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     fetchUserProfile,
     continueWithGoogle,
     continueWithGithub,
-  };
+  }
 
   if (!isAuthReady) {
-    return <Loader />;
+    return <Loader />
   }
 
   return (
     <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
-  );
-};
+  )
+}

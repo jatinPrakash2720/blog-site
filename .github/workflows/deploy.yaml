@@ -30,5 +30,6 @@ jobs:
         env:
           VITE_SERVER_URI: ${{ secrets.VITE_SERVER_URI }}
           VITE_SOCKET_URI: ${{ secrets.VITE_SOCKET_URI }}
+          VITE_BACKEND_URL: ${{ secrets.VITE_BACKEND_URL }}
       - name: Docker Clean
         run: docker system prune -af
