@@ -533,7 +533,8 @@ const loginWithGoogle = asyncHandler(async (req, res) => {
   const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
     user._id
   );
-  const redirectOrigin = process.env.CORS_ORIGIN.split(",")[0];
+  const redirectOrigin = process.env.DEPLOYE_URL;
+  // const redirectOrigin = process.env.CORS_ORIGIN.split(",")[0];
   const redirectURL = `${redirectOrigin}/auth/google/callback`;
   return res
     .status(200)
@@ -547,7 +548,8 @@ const loginWithGithub = asyncHandler(async (req, res) => {
   const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
     user._id
   );
-  const redirectOrigin = process.env.CORS_ORIGIN.split(",")[0];
+  const redirectOrigin = process.env.DEPLOYE_URL;
+  // const redirectOrigin = process.env.CORS_ORIGIN.split(",")[0];
   const redirectURL = `${redirectOrigin}/auth/github/callback`;
 
   return res
