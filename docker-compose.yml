@@ -3,10 +3,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        - VITE_SERVER_URI=${VITE_SERVER_URI}
+        - VITE_BACKEND_URL=${VITE_BACKEND_URL}
+        - VITE_SOCKET_URI=${VITE_SOCKET_URI}
     container_name: blog-site-frontend
     ports:
       - "3000:3000"
-    environment:
-      - VITE_SERVER_URI=${VITE_SERVER_URI}
-      - VITE_BACKEND_URL=${VITE_BACKEND_URL}
-      - VITE_SOCKET_URI=${VITE_SOCKET_URI}
