@@ -140,9 +140,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, [])
 
   const continueWithGoogle = () => {
+    console.log("Environment variables:")
+    console.log("VITE_BACKEND_URL:", import.meta.env.VITE_BACKEND_URL)
+    console.log("VITE_SERVER_URI:", import.meta.env.VITE_SERVER_URI)
+    console.log("All env vars:", import.meta.env)
+    
     // For OAuth, we need to redirect to the backend server, not through nginx proxy
     const backendUrl =
       import.meta.env.VITE_BACKEND_URL || "http://localhost:8080"
+    console.log("Final backend URL:", backendUrl)
+    console.log("Redirecting to:", `${backendUrl}/api/v1/users/google`)
     window.location.href = `${backendUrl}/api/v1/users/google`
   }
 

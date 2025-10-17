@@ -79,6 +79,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.33.0",
+    "@types/babel__core": "^7.20.5",
     "@types/lodash.throttle": "^4.1.9",
     "@types/node": "^24.3.0",
     "@types/react": "^19.1.10",
