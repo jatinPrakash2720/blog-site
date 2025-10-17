@@ -529,6 +529,11 @@ const getReadHistory = asyncHandler(async (req, res) => {
   ]);*/
 });
 const loginWithGoogle = asyncHandler(async (req, res) => {
+  console.log("Google OAuth callback triggered");
+  console.log("Environment variables:");
+  console.log("DEPLOYE_URL:", process.env.DEPLOYE_URL);
+  console.log("CORS_ORIGIN:", process.env.CORS_ORIGIN);
+  
   const user = req.user;
   const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
     user._id
@@ -536,6 +541,9 @@ const loginWithGoogle = asyncHandler(async (req, res) => {
   const redirectOrigin = process.env.DEPLOYE_URL;
   // const redirectOrigin = process.env.CORS_ORIGIN.split(",")[0];
   const redirectURL = `${redirectOrigin}/auth/google/callback`;
+  
+  console.log("Redirecting to:", redirectURL);
+  
   return res
     .status(200)
     .cookie("accessToken", accessToken, oauthOption) // Use oauthOption

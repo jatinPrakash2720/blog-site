@@ -8,7 +8,7 @@ export const configurePassport = () => {
     passport.use(new GoogleStrategy({
         clientID: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        callbackURL: "/api/v1/users/google/callback",
+        callbackURL: `${process.env.DEPLOYE_URL || 'http://localhost:8080'}/api/v1/users/google/callback`,
         scope:["profile","email"]
     },
         async (accessToken, refreshToken, profile, done) => {
@@ -45,7 +45,7 @@ export const configurePassport = () => {
       new GithubStrategy({
         clientID: process.env.G_CLIENT_ID,
         clientSecret: process.env.G_CLIENT_SECRET,
-        callbackURL: `/api/v1/users/github/callback`,
+        callbackURL: `${process.env.DEPLOYE_URL || 'http://localhost:8080'}/api/v1/users/github/callback`,
         scope:['user:email']
       },
           async (accessToken, refreshToken, profile, done) => {
