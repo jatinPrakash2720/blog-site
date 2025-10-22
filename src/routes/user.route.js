@@ -12,11 +12,13 @@ import {
   refreshAccessToken,
   registerUser,
   restorePassword,
+  signUpUser,
   updateUserAvatar,
   updateUserCoverImage,
   updateUserEmail,
   updateUserFullName,
   updateUserProfileImages,
+  verifyUser,
 } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
@@ -27,6 +29,8 @@ const router = Router();
 // console.log("User routes loaded");
 
 router.route("/register").post(registerUser);
+router.route("/signup").post(signUpUser);
+router.route("/verify").post(verifyUser);
 router.route("/:userId/profile-images").patch(
   upload.fields([
     { name: "avatar", maxCount: 1 },

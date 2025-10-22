@@ -1,4 +1,5 @@
 export const DB_NAME = "videotube";
+export const DB_NAME_TEST = "videotube-test";
 
 export const IMAGE_FOLDERS = {
   AVATAR: "avatar",

@@ -48,5 +48,6 @@ jobs:
           EMAIL_USER: ${{ secrets.EMAIL_USER }}
           EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
           DEPLOYE_URL: ${{ secrets.DEPLOYE_URL }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
       - name: Docker Clean
         run: docker system prune -af

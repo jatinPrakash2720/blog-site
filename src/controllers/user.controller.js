@@ -12,6 +12,7 @@ import jwt from "jsonwebtoken";
 import { IMAGE_FOLDERS } from "../constants.js";
 import { sendEmail } from "../utils/mailer.util.js";
 import crypto from "crypto";
+import { sendVerificationEmail } from "../utils/sendEmail.util.js";
 
 const option = {
   httpOnly: true,
@@ -58,6 +59,114 @@ const registerUser = asyncHandler(async (req, res) => {
   return res
     .status(201)
     .json(new ApiResponse(201, createdUser, "User registered successfully!"));
+});
+
+const signUpUser = asyncHandler(async (req, res) => {
+  const { username, email, password } = req.body;
+  if ([username, email, password].some((field) => field?.trim() === "")) {
+    throw new ApiError(400, "All Fields are required");
+  }
+  const existedUser = await User.findOne({ email });
+  if (existedUser) {
+    throw new ApiError(409, "User with email already exists");
+  }
+  const verifyCode = Math.floor(100000 + Math.random()).toString();
+  const expiryDate = new Date();
+  expiryDate.setHours(expiryDate.getHours() + 1);
+
+  const user = await User.create({
+    email: email,
+    username: username.toLowerCase(),
+    password: password,
+    verifyCode: verifyCode,
+    verifyCodeExpiry: expiryDate,
+  });
+
+  if (!user) {
+    throw new ApiError(500, "Something went wrong registering the user");
+  }
+
+  const emailResponse = await sendVerificationEmail(
+    email,
+    username,
+    verifyCode
+  );
+  if (!emailResponse.success) {
+    throw new ApiError(500, emailResponse.message);
+  }
+  // Destructure and return only necessary user fields (excluding sensitive data)
+  const { email: userEmail } = user.toObject();
+
+  return res
+    .status(201)
+    .json(
+      new ApiResponse(
+        201,
+        { email: userEmail },
+        "User registered successfully. Please verify your email"
+      )
+    );
+});
+
+const verifyUser = asyncHandler(async (req, res) => {
+  const { email, code } = req.body;
+  if (!email || !code) {
+    throw new ApiError(400, "Email and code are required");
+  }
+  const user = await User.findOne({ email: email });
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+  const isCodeValid = user.verifyCode === code;
+  const isCodeExpired = user.verifyCodeExpiry < new Date();
+
+  if (isCodeValid && !isCodeExpired) {
+    user.verifyCode = undefined;
+    user.verifyCodeExpiry = undefined;
+    await user.save({ validateBeforeSave: false, new: true });
+
+    const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
+      user._id
+    );
+
+    const {
+      _id,
+      username: userUsername,
+      email: userEmail,
+      fullName,
+      avatar,
+      coverImage,
+      bio,
+      createdAt,
+      updatedAt,
+    } = user.toObject();
+    return res
+      .status(200)
+      .cookie("accessToken", accessToken, option)
+      .cookie("refreshToken", refreshToken, option)
+      .json(
+        new ApiResponse(
+          200,
+          {
+            user: {
+              _id,
+              username: userUsername,
+              email: userEmail,
+              fullName,
+              avatar,
+              coverImage,
+              bio,
+              createdAt,
+              updatedAt,
+            },
+            accessToken: accessToken,
+            refreshToken: refreshToken,
+          },
+          "User verified successfully"
+        )
+      );
+  }
+  throw new ApiError(401, "Invalid code or code expired");
 });
 const updateUserProfileImages = asyncHandler(async (req, res) => {
   const { userId } = req.params;
@@ -112,48 +221,69 @@ const loginUser = asyncHandler(async (req, res) => {
   loggedinuser ki details bej denge
   aur cookies mein kr denge, with options
   */
-   const { email, password } = req.body;
-   console.log(password);
-   if (!email) {
-     throw new ApiError(400, "email is required");
-   }
-   const user = await User.findOne({ email });
-   console.log(user);
-   if (!user) {
-     throw new ApiError(404, "User does not exists");
-   }
-   const isPasswordValid = await user.isPasswordCorrect(password);
-   console.log(isPasswordValid);
-   if (!isPasswordValid) {
-     throw new ApiError(401, "Invalid user credentials");
-   }
+  const { email, password } = req.body;
+  console.log(password);
+  if (!email) {
+    throw new ApiError(400, "email is required");
+  }
+  const user = await User.findOne({ email });
+  console.log(user);
+  if (!user) {
+    throw new ApiError(404, "User does not exists");
+  }
+  const isPasswordValid = await user.isPasswordCorrect(password);
+  console.log(isPasswordValid);
+  if (!isPasswordValid) {
+    throw new ApiError(401, "Invalid user credentials");
+  }
 
-   const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
-     user._id
-   );
-   const loggedInUser = await User.findById(user._id).select(
-     "-password -refreshToken"
-   );
+  const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
+    user._id
+  );
+  const {
+    _id,
+    username: userUsername,
+    email: userEmail,
+    fullName,
+    avatar,
+    coverImage,
+    bio,
+    createdAt,
+    updatedAt,
+  } = user.toObject();
+  // const loggedInUser = await User.findById(user._id).select(
+  //   "-password -refreshToken"
+  // );
 
-   // const option = {
-   //   httpOnly: true,
-   //   secure: true,
-   // };
-   return res
-     .status(200)
-     .cookie("accessToken", accessToken, option)
-     .cookie("refreshToken", refreshToken, option)
-     .json(
-       new ApiResponse(
-         200,
-         {
-           user: loggedInUser,
-           accessToken: accessToken,
-           refreshToken: refreshToken,
-         },
-         "User logged in Successfully"
-       )
-     );
+  // const option = {
+  //   httpOnly: true,
+  //   secure: true,
+  // };
+  return res
+    .status(200)
+    .cookie("accessToken", accessToken, option)
+    .cookie("refreshToken", refreshToken, option)
+    .json(
+      new ApiResponse(
+        200,
+        {
+          user: {
+            _id,
+            username: userUsername,
+            email: userEmail,
+            fullName,
+            avatar,
+            coverImage,
+            bio,
+            createdAt,
+            updatedAt,
+          },
+          accessToken: accessToken,
+          refreshToken: refreshToken,
+        },
+        "User logged in Successfully"
+      )
+    );
 });
 const logoutUser = asyncHandler(async (req, res) => {
   try {
@@ -533,7 +663,7 @@ const loginWithGoogle = asyncHandler(async (req, res) => {
   console.log("Environment variables:");
   console.log("DEPLOYE_URL:", process.env.DEPLOYE_URL);
   console.log("CORS_ORIGIN:", process.env.CORS_ORIGIN);
-  
+
   const user = req.user;
   const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
     user._id
@@ -541,9 +671,9 @@ const loginWithGoogle = asyncHandler(async (req, res) => {
   const redirectOrigin = process.env.DEPLOYE_URL;
   // const redirectOrigin = process.env.CORS_ORIGIN.split(",")[0];
   const redirectURL = `${redirectOrigin}/auth/google/callback`;
-  
+
   console.log("Redirecting to:", redirectURL);
-  
+
   return res
     .status(200)
     .cookie("accessToken", accessToken, oauthOption) // Use oauthOption
@@ -648,6 +778,8 @@ const restorePassword = asyncHandler(async (req, res) => {
 
 export {
   registerUser,
+  signUpUser,
+  verifyUser,
   updateUserProfileImages,
   loginUser,
   logoutUser,

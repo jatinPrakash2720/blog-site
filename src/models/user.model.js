@@ -23,14 +23,16 @@ const userSchema = new Schema(
     },
     fullName: {
       type: String,
-      required: true,
       trim: true,
+      required: false,
     },
     avatar: {
       type: String, // cloudinary URL
+      required: false,
     },
     coverImage: {
       type: String, //cloudinary URL
+      required: false,
     },
     bio: {
       type: String,
@@ -55,6 +57,12 @@ const userSchema = new Schema(
         return !this.googleId && !this.githubId;
       },
     },
+    verifyCode: {
+      type: String,
+    },
+    verifyCodeExpiry: {
+      type: Date,
+    },
     refreshToken: {
       type: String,
     },
@@ -65,10 +73,7 @@ const userSchema = new Schema(
 );
 
 userSchema.pre("save", async function (next) {
-  console.log("--- PRE-SAVE HOOK TRIGGERED ---"); // <-- Add this line
-  console.log("Is password modified?", this.isModified("password")); // <-- And this line
   if (!this.isModified("password")) return next();
-  // ✅ Corrected: Added 'await' to wait for the hashing to finish
   this.password = await bcrypt.hash(this.password, 10);
   next();
 });
