@@ -1,20 +1,18 @@
-import Header from "../components/layout/Header";
+import Header1 from "../components/layout/Header1";
 import { Link } from "react-router-dom";
 import { ArrowRight, Edit2, BookOpen, Users } from "lucide-react";
 import { Button } from "../components/ui/button";
-import ParticleBackground from "../components/common/background/ParticeBackground";
 
 const LandingPage = () => {
   return (
-    <div className="min-h-screen">
-      <ParticleBackground />
-      <Header />
+    <div className="min-h-screen bg-white dark:bg-black flex flex-col justify-around">
+      <Header1 />
 
       {/* Hero Section */}
-      <main className="overflow-hidden">
-        <section className="pt-24 md:pt-36">
+      <main className="overflow-hidden flex-1 flex items-center justify-center mt-18 sm:mt-0">
+        <section className="w-full">
           <div className="mx-auto max-w-7xl px-6">
-            <div className="text-center sm:mx-auto lg:mr-auto lg:mt-0">
+            <div className="text-center">
               {/* Announcement Badge */}
               <Link
                 to="#"
@@ -71,7 +69,7 @@ const LandingPage = () => {
           </div>
 
           {/* Preview Image */}
-          <div className="relative -mr-56 mt-16 overflow-hidden px-2 sm:mr-0 sm:mt-20 md:mt-24">
+          {/* <div className="relative -mr-56 mt-16 overflow-hidden px-2 sm:mr-0 sm:mt-20 md:mt-24">
             <div
               aria-hidden
               className="bg-gradient-to-b to-background absolute inset-0 z-10 from-transparent from-35%"
@@ -90,57 +88,24 @@ const LandingPage = () => {
                 </div>
               </div>
             </div>
-          </div>
+          </div> */}
         </section>
 
-        {/* Features Section */}
-        <section className="bg-background pb-16 pt-16 md:pb-32">
-          <div className="mx-auto max-w-5xl px-6">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                Why Choose BlogLikho?
-              </h2>
-              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-                Everything you need to share your stories with the world
-              </p>
-            </div>
+         
+        </main>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {/* Feature 1 */}
-              <div className="text-center p-6 rounded-xl border bg-card/50 backdrop-blur">
-                <Edit2 className="w-12 h-12 mx-auto text-primary mb-4" />
-                <h3 className="text-xl font-semibold mb-2">Rich Editor</h3>
-                <p className="text-muted-foreground">
-                  Write with our intuitive editor featuring markdown support,
-                  media embeds, and real-time preview.
-                </p>
-              </div>
-
-              {/* Feature 2 */}
-              <div className="text-center p-6 rounded-xl border bg-card/50 backdrop-blur">
-                <Users className="w-12 h-12 mx-auto text-primary mb-4" />
-                <h3 className="text-xl font-semibold mb-2">Community</h3>
-                <p className="text-muted-foreground">
-                  Connect with fellow writers, get feedback, and grow your
-                  audience in our vibrant community.
-                </p>
-              </div>
-
-              {/* Feature 3 */}
-              <div className="text-center p-6 rounded-xl border bg-card/50 backdrop-blur">
-                <BookOpen className="w-12 h-12 mx-auto text-primary mb-4" />
-                <h3 className="text-xl font-semibold mb-2">Discover</h3>
-                <p className="text-muted-foreground">
-                  Explore trending topics, follow your favorite authors, and
-                  never miss great content.
-                </p>
-              </div>
-            </div>
+        {/* Footer */}
+        <footer className="bg-gray-50 dark:bg-zinc-900 border-t border-gray-200 dark:border-zinc-600">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-center">
+            <p className="text-gray-600 dark:text-gray-400 text-sm">
+              Designed and Developed by{" "}
+              <span className="font-semibold text-gray-900 dark:text-white">
+                Jatin Prakash
+              </span>
+            </p>
           </div>
-        </section>
-      </main>
-      
-    </div>
+        </footer>
+      </div>
   );
 };
 

@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import ThemeToggle from "@/components/common/wrappers/ThemeToggle";
-import { AuthProgressBar } from "./auth-progress-bar";
 import type { AuthMode } from "@/pages/AuthPage";
 
 interface AuthLayoutProps {
@@ -19,12 +18,6 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children, authMode }) => {
     navigate("/");
   };
 
-  // This is the fix. The AuthProgressBar component expects the type "restore-password",
-  // but it was receiving "reset-password". We map it here to ensure the correct
-  // type is passed, resolving the TypeScript error.
-  // const progressBarMode =
-  //   authMode === "rest-password" ? "restore-password" : authMode;
-
   return (
     // The AnimatePresence component enables smooth fade-in/fade-out animations
     <AnimatePresence>
@@ -39,13 +32,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children, authMode }) => {
           onClick={handleClose} // Close the modal when clicking the background
         />
 
-        {/* 2. Auth Progress Bar (optional, can be kept) */}
-        <AuthProgressBar
-          authMode={authMode}
-          className="hidden md:block"
-        />
-
-        {/* 3. Modal Content Container */}
+        {/* 2. Modal Content Container */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -56,7 +43,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children, authMode }) => {
           {children}
         </motion.div>
 
-        {/* 4. Close and Theme Toggle Buttons */}
+        {/* 3. Close and Theme Toggle Buttons */}
         <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
           <ThemeToggle />
           <button

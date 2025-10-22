@@ -8,6 +8,18 @@ export const registerUser = (data: apiInterfaces.RegisterData) => {
     data
   );
 };
+export const signUpUser = (data: apiInterfaces.SignUpData) => {
+  return apiClient.post<ApiResponse<{ email: string }>>("/users/signup", data);
+};
+export const verifyUser = (data: apiInterfaces.VerifyUserPayload) => {
+  return apiClient.post<
+    ApiResponse<{
+      user: apiInterfaces.User;
+      accessToken: string;
+      refreshToken: string;
+    }>
+  >("/users/verify", data);
+};
 
 export const updateProfileImages = (userId: string, imageData: FormData) => {
   return apiClient.patch(`/users/${userId}/profile-images`, imageData);

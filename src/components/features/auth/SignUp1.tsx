@@ -2,18 +2,16 @@
 
 import type React from "react";
 import { useState } from "react";
-import { Eye, EyeOff, User, Mail, Lock, Shield, FileText } from "lucide-react";
-import { GlassInputWrapper } from "@/components/common/subComps/GlassInputWrapper";
+import { Eye, EyeOff, User, Mail, Lock, FileText } from "lucide-react";
 import type { SignUpPageProps } from "@/types/components/features/auth";
 import { GoogleIcon } from "@/components/icons/GoogleIcon";
-import FocusTrackingInput from "@/components/common/wrappers/FocusTrackingInput";
 import { Button } from "@/components/ui/button";
 import Checkbox from "@/components/common/wrappers/Checkbox";
 import { useTheme } from "@/store/theme";
 import { GithubIcon } from "@/components/icons/GithubIcon";
 import { useAuth } from "@/store/auth";
 
-export const SignUpPage: React.FC<SignUpPageProps> = ({
+export const SignUpPage1: React.FC<SignUpPageProps> = ({
   title = (
     <span className="font-light text-foreground tracking-tighter">
       Create Account
@@ -25,8 +23,6 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({
 }) => {
   const theme = useTheme();
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
   const { continueWithGoogle, continueWithGithub } = useAuth();
 
   return (
@@ -41,39 +37,19 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({
           </p>
 
           <form className="space-y-4" onSubmit={onSignUp}>
-            <div className="animate-app-fade-in duration-[0.3s] grid grid-cols-2 gap-4">
+            <div className="animate-app-fade-in duration-[0.3s] space-y-2">
               <div>
                 <label className="text-sm font-medium text-foreground flex items-center gap-2 mb-1">
                   <User className="w-4 h-4" />
                   Username
                 </label>
-                <GlassInputWrapper>
-                  <FocusTrackingInput
-                    fieldName="add-username"
+                  <input
                     name="username"
                     type="text"
                     placeholder="Choose Username"
-                    className="w-full bg-transparent placeholder:text-muted-foreground text-sm p-3 rounded-2xl focus:outline-none"
+                    className="w-full  bg-white/55 dark:bg-black/30 border-none hover:shadow-2xl shadow-2xs transition-all duration-300 hover:bg-white/80 dark:hover:bg-black/50 placeholder:text-muted-foreground sm:text-sm md:text-base lg:text-lg p-3 rounded-2xl focus:outline-none"
                     required
                   />
-                </GlassInputWrapper>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-foreground flex items-center gap-2 mb-1">
-                  <User className="w-4 h-4" />
-                  Full Name
-                </label>
-                <GlassInputWrapper>
-                  <FocusTrackingInput
-                    fieldName="add-fullname"
-                    name="fullName"
-                    type="text"
-                    placeholder="Enter Full Name"
-                    className="w-full bg-transparent placeholder:text-muted-foreground text-sm p-3 rounded-2xl focus:outline-none"
-                    required
-                  />
-                </GlassInputWrapper>
               </div>
             </div>
 
@@ -82,32 +58,27 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({
                 <Mail className="w-4 h-4" />
                 Email Address
               </label>
-              <GlassInputWrapper>
-                <FocusTrackingInput
-                  fieldName="add-email"
+                <input
                   name="email"
                   type="email"
                   placeholder="Enter your Email Address"
-                  className="w-full bg-transparent  placeholder:text-muted-foreground text-sm p-3 rounded-2xl focus:outline-none"
+                  className="w-full text-foreground bg-white/55 dark:bg-black/30 border-none hover:shadow-2xl shadow-2xs transition-all duration-300 hover:bg-white/80 dark:hover:bg-black/50 placeholder:text-muted-foreground sm:text-sm md:text-base lg:text-lg p-3 rounded-2xl focus:outline-none"
                   required
                 />
-              </GlassInputWrapper>
             </div>
 
-            <div className="animate-app-fade-in duration-[0.5s] grid grid-cols-2 gap-4">
+            <div className="animate-app-fade-in duration-[0.5s] space-y-2">
               <div>
                 <label className="text-sm font-medium text-foreground flex items-center gap-2 mb-1">
                   <Lock className="w-4 h-4" />
                   Password
                 </label>
-                <GlassInputWrapper>
                   <div className="relative">
-                    <FocusTrackingInput
-                      fieldName="add-password"
+                    <input
                       name="password"
                       type={showPassword ? "text" : "password"}
                       placeholder="Create Password"
-                      className="w-full bg-transparent placeholder:text-muted-foreground text-sm p-3 rounded-2xl focus:outline-none"
+                      className="w-full text-foreground border-none bg-white/55 dark:bg-black/30 hover:shadow-2xl shadow-2xs transition-all duration-300 hover:bg-white/80 dark:hover:bg-black/50 placeholder:text-muted-foreground sm:text-sm md:text-base lg:text-lg p-3 rounded-2xl focus:outline-none"
                       required
                     />
                     <button
@@ -122,40 +93,8 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({
                       )}
                     </button>
                   </div>
-                </GlassInputWrapper>
               </div>
 
-              <div>
-                <label className="text-sm font-medium text-foreground flex items-center gap-2 mb-1">
-                  <Shield className="w-4 h-4" />
-                  Confirm Password
-                </label>
-                <GlassInputWrapper>
-                  <div className="relative">
-                    <FocusTrackingInput
-                      fieldName="confirm-password"
-                      name="confirmPassword"
-                      type={showConfirmPassword ? "text" : "password"}
-                      placeholder="Confirm Password"
-                      className="w-full bg-transparent placeholder:text-muted-foreground text-sm p-3 rounded-2xl focus:outline-none"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setShowConfirmPassword(!showConfirmPassword)
-                      }
-                      className="absolute inset-y-0 right-3 flex items-center"
-                    >
-                      {showConfirmPassword ? (
-                        <EyeOff className="w-5 h-5 text-foreground hover:text-foreground transition-colors" />
-                      ) : (
-                        <Eye className="w-5 h-5 text-foreground hover:text-foreground transition-colors" />
-                      )}
-                    </button>
-                  </div>
-                </GlassInputWrapper>
-              </div>
             </div>
 
             <div className="animate-app-fade-in duration-[0.6s] flex items-center gap-3">

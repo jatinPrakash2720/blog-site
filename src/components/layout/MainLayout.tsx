@@ -14,7 +14,7 @@ interface MainLayoutProps {
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   
   return (
-    <div>
+    <div className="min-h-screen bg-white dark:bg-black">
       {/* The main page content (e.g., HomePage) is rendered here. */}
       {children}
 

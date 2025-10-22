@@ -8,6 +8,8 @@ export interface User {
   bio?: string;
   createdAt: string;
   updatedAt: string;
+  verifyCode: string;
+  verifyCodeExpiry: Date;
 }
 
 export interface Blog {
@@ -70,6 +72,15 @@ export interface RegisterData {
   fullName: string;
   email: string;
   password: string;
+}
+export interface SignUpData {
+  username: string;
+  email: string;
+  password: string;
+}
+export interface VerifyUserPayload {
+  email: string;
+  code: string;
 }
 
 export interface ChangePasswordData {

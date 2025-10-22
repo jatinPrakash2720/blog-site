@@ -11,9 +11,12 @@ import { RestorePassword } from "@/components/features/auth/RestorePassword";
 import { useAuth } from "@/store/auth";
 import AuthLayout from "@/components/layout/AuthLayout";
 import type { RegisterData } from "@/types/api";
+import { signUpUser } from "@/services/user.service";
+import { SignUpPage1 } from "@/components/features/auth/SignUp1";
 
 export type AuthMode =
   | "login"
+  | "signup"
   | "register"
   | "profile-setup"
   | "forgot-password"
@@ -38,7 +41,6 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
   } = useAuth();
 
   // Sample testimonials for register page
-  
 
   // Login handlers
   const handleSignIn = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -52,6 +54,20 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
     }
   };
 
+  const handleSignUp1 = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const username = formData.get("username") as string;
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+    const response = await signUpUser({ username, email, password });
+    if (response.data.success) {
+      navigate("/auth/verify-otp", {
+        state: { email: response.data.data.email },
+      });
+    }
+    console.log(response.data.data.email);
+  };
   // Register handlers
   const handleSignUp = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -130,7 +146,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
   // OTP verification handlers
   const handleVerifyOTP = (otp: string) => {
     console.log("Verifying OTP:", otp);
-    navigate("/auth/profile-setup");
+    navigate("/blog/home");
   };
 
   const handleResendCode = () => {
@@ -170,14 +186,20 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
             heroImageSrc="https://images.unsplash.com/photo-1642615835477-d303d7dc9ee9?w=2160&q=80"
           />
         );
-
+      // case "signup":
+      //   return (
+      //     <SignUpPage1
+      //       onSignUp={handleSignUp1}
+      //       onSignIn={handleSignInNav}
+      //       heroImageSrc="https://images.unsplash.com/photo-1642615835477-d303d7dc9ee9?w=2160&q=80"
+      //     />
+      //   );
       case "register":
         return (
-          <SignUpPage
+          <SignUpPage1
             heroImageSrc="https://images.unsplash.com/photo-1642615835477-d303d7dc9ee9?w=2160&q=80"
-            onSignUp={handleSignUp}
+            onSignUp={handleSignUp1}
             onSignIn={handleSignInNav}
-            
           />
         );
 
@@ -201,6 +223,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ mode }) => {
       case "verify-otp":
         return (
           <OTPVerificationFeature
+            email={location.state?.email || "user@example.com"}
             onVerifyOTP={handleVerifyOTP}
             onResendCode={handleResendCode}
             onGoBack={handleGoBack}

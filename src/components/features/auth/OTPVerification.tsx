@@ -3,10 +3,12 @@
 import type React from "react";
 import { useState, useEffect } from "react";
 import { RefreshCw } from "lucide-react";
+import { useLocation } from "react-router-dom";
 import type { OTPVerificationPageProps } from "@/types/components/features/auth";
 import { OTPInput } from "@/components/common/subComps/OTPInputs";
-import {Button} from "@/components/common/wrappers/Button";
+import { Button } from "@/components/common/wrappers/Button";
 import { useTheme } from "@/store/theme";
+import { useAuth } from "@/store/auth";
 
 export const OTPVerificationPage: React.FC<OTPVerificationPageProps> = ({
   title = (
@@ -16,15 +18,21 @@ export const OTPVerificationPage: React.FC<OTPVerificationPageProps> = ({
   ),
   description = "We've sent a verification code to your email address",
   email = "user@example.com",
-  onVerifyOTP,
   onResendCode,
   codeLength = 6,
 }) => {
   const [otp, setOtp] = useState("");
   const [isResending, setIsResending] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [countdown, setCountdown] = useState(0);
+  const [error, setError] = useState("");
 
+  const location = useLocation();
   const theme = useTheme();
+  const { verifyUser } = useAuth();
+
+  // Get email from location state
+  const userEmail = location.state?.email || email;
 
   useEffect(() => {
     if (countdown > 0) {
@@ -37,9 +45,27 @@ export const OTPVerificationPage: React.FC<OTPVerificationPageProps> = ({
     setOtp(otpValue);
   };
 
-  const handleVerify = () => {
-    if (otp.length === codeLength) {
-      onVerifyOTP?.(otp);
+  const handleVerify = async () => {
+    if (otp.length !== codeLength) return;
+
+    setIsVerifying(true);
+    setError("");
+
+    try {
+      await verifyUser({
+        email: userEmail,
+        code: otp,
+      });
+      // The verifyUser function from auth store handles everything
+      // including setting localStorage and navigation
+    } catch (error: any) {
+      console.error("Verification error:", error);
+      setError(
+        error.response?.data?.message ||
+          "Verification failed. Please try again."
+      );
+    } finally {
+      setIsVerifying(false);
     }
   };
 
@@ -61,8 +87,6 @@ export const OTPVerificationPage: React.FC<OTPVerificationPageProps> = ({
       {/* Left column: OTP verification form */}
       <div className="w-full max-w-md hover:shadow-3xl px-8 py-4 bg-white/50 dark:bg-black/40 backdrop-blur-xl border dark:border-white/10 border-black/10 rounded-[32px] shadow-2xl transform transition-all duration-300 hover:shadow-3xl">
         <div className="flex flex-col items-start gap-6">
-        
-
           <h1 className=" text-4xl md:text-5xl font-semibold leading-tight text-center w-full">
             {title}
           </h1>
@@ -70,7 +94,7 @@ export const OTPVerificationPage: React.FC<OTPVerificationPageProps> = ({
           <div className=" w-full flex flex-col items-center">
             <p className="text-muted-foreground text-center ">{description}</p>
             <p className="text-sm text-foreground/80 mt-1 text-center">
-              Sent to <span className="font-medium">{email}</span>
+              Sent to <span className="font-medium">{userEmail}</span>
             </p>
           </div>
 
@@ -82,14 +106,20 @@ export const OTPVerificationPage: React.FC<OTPVerificationPageProps> = ({
               <OTPInput length={codeLength} onComplete={handleOTPComplete} />
             </div>
 
+            {error && (
+              <div className="text-red-500 text-sm text-center bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">
+                {error}
+              </div>
+            )}
+
             <Button
               intent={theme.theme === "dark" ? "authd" : "authl"}
               size="auth"
               onClick={handleVerify}
-              disabled={otp.length !== codeLength}
+              disabled={otp.length !== codeLength || isVerifying}
               className="animate-element animate-delay-500"
             >
-              Verify Code
+              {isVerifying ? "Verifying..." : "Verify Code"}
             </Button>
           </div>
 

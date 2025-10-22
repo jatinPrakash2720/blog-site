@@ -19,7 +19,9 @@ import type {
   Comment,
   ForgotPasswordPayload,
   ResetPasswordPayload,
-  RegisterData
+  RegisterData,
+  VerifyUserPayload,
+  SignUpData
 
 } from "../types/api.ts";
 import type { Dispatch, ReactNode, SetStateAction } from "react";
@@ -34,6 +36,8 @@ export interface IAuthContext {
   viewedProfile: User | null;
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (userData: RegisterData) => Promise<void>;
+  signUp: (userData: SignUpData) => Promise<void>;
+  verifyUser: (userData: VerifyUserPayload) => Promise<void>;
   completeProfileSetup: (userId: string, imageData: FormData) => Promise<void>;
   logout: () => Promise<void>;
   refreshAuthToken: () => Promise<void>;

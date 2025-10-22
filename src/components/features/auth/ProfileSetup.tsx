@@ -5,13 +5,11 @@ import { useState, useEffect } from "react";
 import { Camera, User, Plus, X } from "lucide-react";
 import type { ProfileSetupProps } from "@/types/components/features/auth";
 import FocusTrackingInput from "@/components/common/wrappers/FocusTrackingInput";
-import { useAuthProgress } from "@/store/theme";
 
 export const ProfileSetup: React.FC<ProfileSetupProps> = ({
   onComplete,
   onSkip,
 }) => {
-  const { setCurrentStep } = useAuthProgress();
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string>("");
@@ -21,15 +19,13 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({
 
   // Set initial step when component mounts
   useEffect(() => {
-    console.log("[ProfileSetup] Setting initial step to: cover");
-    setCurrentStep("cover");
-  }, [setCurrentStep]);
+    console.log("[ProfileSetup] Component mounted");
+  }, []);
 
   const handleAvatarUpload = (file: File) => {
     setUploadingAvatar(true);
     setAvatarFile(file);
-    console.log("[ProfileSetup] Setting step to: avatar");
-    setCurrentStep("avatar");
+    console.log("[ProfileSetup] Avatar uploaded");
     const reader = new FileReader();
     reader.onload = (e) => {
       setAvatarPreview(e.target?.result as string);
@@ -41,8 +37,7 @@ export const ProfileSetup: React.FC<ProfileSetupProps> = ({
   const handleCoverUpload = (file: File) => {
     setUploadingCover(true);
     setCoverFile(file);
-    console.log("[ProfileSetup] Setting step to: cover");
-    setCurrentStep("cover");
+    console.log("[ProfileSetup] Cover uploaded");
     const reader = new FileReader();
     reader.onload = (e) => {
       setCoverPreview(e.target?.result as string);
