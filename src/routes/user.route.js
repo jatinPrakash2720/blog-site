@@ -10,14 +10,14 @@ import {
   loginWithGoogle,
   logoutUser,
   refreshAccessToken,
-  registerUser,
+  resendVerifyCode,
   restorePassword,
   signUpUser,
+  uniqueUsername,
   updateUserAvatar,
   updateUserCoverImage,
   updateUserEmail,
   updateUserFullName,
-  updateUserProfileImages,
   verifyUser,
 } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
@@ -28,15 +28,17 @@ import passport from "passport";
 const router = Router();
 // console.log("User routes loaded");
 
-router.route("/register").post(registerUser);
+// router.route("/register").post(registerUser);
 router.route("/signup").post(signUpUser);
 router.route("/verify").post(verifyUser);
-router.route("/:userId/profile-images").patch(
-  upload.fields([
-    { name: "avatar", maxCount: 1 },
-    { name: "coverImage", maxCount: 1 },
-  ]), updateUserProfileImages
-);
+router.route("/unique-username").post(uniqueUsername);
+router.route("/resend-verify-code").post(resendVerifyCode);
+// router.route("/:userId/profile-images").patch(
+//   upload.fields([
+//     { name: "avatar", maxCount: 1 },
+//     { name: "coverImage", maxCount: 1 },
+//   ]), updateUserProfileImages
+// );
 router.route("/login").post(loginUser);
 router.route("/logout").get(verifyJWT, logoutUser);
 router.route("/refresh-token").post(refreshAccessToken);

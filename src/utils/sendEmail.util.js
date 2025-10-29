@@ -1,16 +1,17 @@
 import { Resend } from "resend";
 import VerificationEmail from "../../emails/verificationEmail.js";
-
+import ForgotPasswordEmail from "../../emails/forgotPasswordEmail.js";
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-export async function sendVerificationEmail(email, username, verifyCode) {
-  console.log(email, username, verifyCode);
+export async function sendEmail(email, username, verifyCode="", resetUrl="") {
+  console.log(email, username, verifyCode, resetUrl);
+
   try {
     const result = await resend.emails.send({
       from: "noreply-bloglikho@jatinbuilds.com",
       to: email,
-      subject: "BlogLikho| SignUp Verification code",
-      html: VerificationEmail({ username, otp: verifyCode }),
+      subject: verifyCode ? "BlogLikho| SignUp Verification code" : "BlogLikho| Forgot Password",
+      html: verifyCode ? VerificationEmail({ username, otp: verifyCode }) : ForgotPasswordEmail({ username, resetUrl }),
     });
     console.log(result);
     if (!result.data?.id) {
