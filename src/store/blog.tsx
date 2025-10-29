@@ -1,8 +1,8 @@
 import * as blogService from "../services/blog.service.ts";
 import * as userService from "../services/user.service.ts";
 import * as contextInterfaces from "../types/context.ts";
-import * as apiInterfaces from "../types/api.ts";
-import type { Blog } from "../types/api.ts";
+import * as apiInterfaces from "../types/apisInterfaces/api.ts";
+import type { Blog } from "../types/apisInterfaces/api.ts";
 import React, { createContext, useCallback, useContext, useState } from "react";
 import { requestHandler } from "../lib/requestHandler.ts";
 import { useAuth } from "./auth.tsx";
@@ -41,7 +41,7 @@ export const BlogProvider: React.FC<contextInterfaces.BlogProviderProps> = ({
     useState<apiInterfaces.PaginatedBlogResponse | null>(null);
   const [readHistoryPagination, setReadHistoryPagination] =
     useState<apiInterfaces.PaginatedBlogResponse | null>(null);
-  
+
   let currentUser = null;
 
   try {

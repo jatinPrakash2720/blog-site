@@ -1,6 +1,6 @@
 // src/components/features/user/ProfilePreview.tsx
 import type React from "react";
-import type { User } from "@/types/api";
+import type { User } from "@/types/apisInterfaces/api";
 
 const ProfilePreview: React.FC<{ user: User }> = ({ user }) => {
   return (

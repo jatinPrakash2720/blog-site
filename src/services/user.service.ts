@@ -1,22 +1,39 @@
 import { apiClient } from "../lib/apiConfig.ts";
-import type * as apiInterfaces from "../types/api.ts";
+import type * as apiInterfaces from "../types/apisInterfaces/api.ts";
 import type { ApiResponse } from "../types/apiResponse.ts";
+import type {
+  LoginData,
+  SignUpData,
+  VerifyUserData,
+  ChangePasswordData,
+  UpdateUserFullNameData,
+  UpdateUserEmailData,
+  UpdateUserAvatarData,
+  UpdateUserCoverImageData,
+  PaginationParams,
+  ForgotPasswordData,
+  ResetPasswordData,
+} from "@/types/apisInterfaces/user.api.ts";
+import type { User, UserPageProfile } from "@/types/modalsInterfaces/User.ts";
+import type { PaginatedBlogResponse } from "@/types/apisInterfaces/blog.api.ts";
 
-export const registerUser = (data: apiInterfaces.RegisterData) => {
-  return apiClient.post<ApiResponse<apiInterfaces.User>>(
-    "/users/register",
-    data
-  );
-};
-export const signUpUser = (data: apiInterfaces.SignUpData) => {
+export const signUpUser = (data: SignUpData) => {
   return apiClient.post<ApiResponse<{ email: string }>>("/users/signup", data);
 };
-export const verifyUser = (data: apiInterfaces.VerifyUserPayload) => {
+
+export const uniqueUsername = (username: string) => {
+  return apiClient.post<ApiResponse<{success: boolean, message: string}>>("/users/unique-username", {username});
+};
+
+export const resendVerifyCode = (email: string) => {
+  return apiClient.post<ApiResponse<{success: boolean, message: string}>>("/users/resend-verify-code", {email});
+};
+export const verifyUser = (data: VerifyUserData) => {
   return apiClient.post<
     ApiResponse<{
-      user: apiInterfaces.User;
-      accessToken: string;
-      refreshToken: string;
+      user: User;
+      accessToken?: string;
+      refreshToken?: string;
     }>
   >("/users/verify", data);
 };
@@ -25,10 +42,11 @@ export const updateProfileImages = (userId: string, imageData: FormData) => {
   return apiClient.patch(`/users/${userId}/profile-images`, imageData);
 };
 
-export const loginUser = (data: apiInterfaces.LoginCredentials) => {
-  return apiClient.post<
-    ApiResponse<{ user: apiInterfaces.User; accessToken: string }>
-  >("/users/login", data);
+export const loginUser = (data: LoginData) => {
+  return apiClient.post<ApiResponse<{ user: User; accessToken: string }>>(
+    "/users/login",
+    data
+  );
 };
 
 export const logoutUser = () => {
@@ -36,55 +54,50 @@ export const logoutUser = () => {
 };
 
 export const refreshAccessToken = () => {
-  return apiClient.post<ApiResponse<{ data: { accessToken: string } }>>(
+  return apiClient.post<ApiResponse<{ accessToken: string }>>(
     "/users/refresh-token"
   );
 };
 
-export const changeCurrentPassword = (
-  data: apiInterfaces.ChangePasswordData
-) => {
+export const changeCurrentPassword = (data: ChangePasswordData) => {
   return apiClient.post("/users/change-password", data);
 };
 
 export const getCurrentUser = () => {
-  return apiClient.get<ApiResponse<apiInterfaces.User>>("/users/current-user");
+  return apiClient.get<ApiResponse<User>>("/users/current-user");
 };
 
-export const updateUserFullName = (data: { fullName: string }) => {
-  return apiClient.patch("/users/update-fullname", data);
+export const updateUserFullName = (data: UpdateUserFullNameData) => {
+  return apiClient.patch<ApiResponse<{fullName: string}>>("/users/update-fullname", data);
 };
 
-export const updateUserEmail = (data: { email: string }) => {
-  return apiClient.patch("/users/update-email", data);
+export const updateUserEmail = (data: UpdateUserEmailData) => {
+  return apiClient.patch<ApiResponse<{email: string}>>("/users/update-email", data);
 };
 
-export const updateUserAvatar = (avatarFormData: FormData) => {
-  return apiClient.patch("/users/update-avatar", avatarFormData);
+export const updateUserAvatar = (data: UpdateUserAvatarData) => {
+  return apiClient.patch<ApiResponse<{avatarUrl: string}>>("/users/update-avatar", data);
 };
 
-export const updateUserCoverImage = (coverImageFormData: FormData) => {
-  return apiClient.patch("/users/update-cover", coverImageFormData);
+export const updateUserCoverImage = (data: UpdateUserCoverImageData) => {
+  return apiClient.patch<ApiResponse<{coverImageUrl: string}>>("/users/update-cover", data);
 };
 
 export const getUserPageProfile = (username: string) => {
-  return apiClient.get<ApiResponse<apiInterfaces.User>>(`/users/c/${username}`);
+  return apiClient.get<ApiResponse<UserPageProfile>>(`/users/c/${username}`);
 };
 
-export const getReadHistory = (params: apiInterfaces.PaginationParams = {}) => {
-  return apiClient.get<ApiResponse<apiInterfaces.PaginatedBlogResponse>>(
-    "/users/history",
-    {
-      params,
-    }
-  );
+export const getReadHistory = (params: PaginationParams) => {
+  return apiClient.get<ApiResponse<PaginatedBlogResponse>>("/users/history", {
+    params,
+  });
 };
 
 export const getUserBlogs = ({
   userId,
   ...params
 }: apiInterfaces.GetUserBlogsParams) => {
-  return apiClient.get<ApiResponse<apiInterfaces.PaginatedBlogResponse>>(
+  return apiClient.get<ApiResponse<PaginatedBlogResponse>>(
     `/users/${userId}/blogs`,
     {
       params,
@@ -92,13 +105,10 @@ export const getUserBlogs = ({
   );
 };
 
-export const forgotPassword = (data: apiInterfaces.ForgotPasswordPayload) => {
-  return apiClient.post("/users/forgot-password", data);
+export const forgotPassword = (data: ForgotPasswordData) => {
+  return apiClient.post<ApiResponse<{success: boolean, message: string}>>("/users/forgot-password", data);
 };
 
-export const restorePassword = (
-  token: string,
-  data: apiInterfaces.ResetPasswordPayload
-) => {
-  return apiClient.post(`/users/restore-password/${token}`, data);
+export const restorePassword = (token: string, data: ResetPasswordData) => {
+  return apiClient.post<ApiResponse<{success: boolean, message: string}>>(`/users/restore-password/${token}`, data);
 };

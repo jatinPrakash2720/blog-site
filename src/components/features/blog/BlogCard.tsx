@@ -1,5 +1,5 @@
 import type React from "react";
-import { useEffect,useRef } from "react";
+import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/common/wrappers/Card";
 import Avatar from "@/components/common/wrappers/Avatar";
@@ -11,17 +11,14 @@ import {
   Bookmark,
   MoreHorizontal,
 } from "lucide-react";
-import type { Blog } from "@/types/api";
+import type { Blog } from "@/types/apisInterfaces/api";
 
 interface AnimatedTitleProps {
   title: string;
   baseClassName: string;
 }
 
-const AnimatedTitle = ({
-  title,
-  baseClassName,
-}: AnimatedTitleProps) => {
+const AnimatedTitle = ({ title, baseClassName }: AnimatedTitleProps) => {
   const titleRef = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
@@ -67,7 +64,6 @@ const AnimatedTitle = ({
     </div>
   );
 };
-
 
 // Define the props for the BlogCard to make it reusable
 interface BlogCardProps {

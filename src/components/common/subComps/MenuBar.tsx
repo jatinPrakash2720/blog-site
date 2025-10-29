@@ -1,6 +1,3 @@
-
-
-
 "use client";
 
 import React from "react";
@@ -18,7 +15,7 @@ import {
   PaginationItem,
   PaginationLink,
 } from "@/components/common/wrappers/Pagination"; // Import pagination components
-import type { PaginatedBlogResponse } from "@/types/api";
+import type { PaginatedBlogResponse } from "@/types/apisInterfaces/api";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface MenuBarItem {
@@ -43,9 +40,8 @@ export const MenuBar: React.FC<MenuBarProps> = ({
   layout = "square",
   onLayoutChange,
   paginationData,
-  onPageChange
+  onPageChange,
 }) => {
-
   return (
     <TooltipProvider>
       <div className="flex items-center gap-2 bg-background/80 backdrop-blur-md border rounded-full px-3 py-2 shadow-lg">

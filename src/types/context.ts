@@ -1,6 +1,5 @@
 import type {
   User,
-  LoginCredentials,
   ChangePasswordData,
   Blog,
   PaginatedBlogResponse,
@@ -17,15 +16,19 @@ import type {
   CreateSaveCollectionPayload,
   UpdateSaveCollectionPayload,
   Comment,
-  ForgotPasswordPayload,
-  ResetPasswordPayload,
-  RegisterData,
   VerifyUserPayload,
-  SignUpData
-
-} from "../types/api.ts";
+  SignUpData,
+} from "./apisInterfaces/api.ts";
 import type { Dispatch, ReactNode, SetStateAction } from "react";
 import { Editor } from "@tiptap/react";
+import type {
+  ForgotPasswordData,
+  LoginData,
+  ResetPasswordData,
+  VerifyUserData,
+} from "./apisInterfaces/user.api.ts";
+import type { UserPageProfile } from "./modalsInterfaces/User.ts";
+import type { ApiResponse } from "./apiResponse.ts";
 
 export interface IAuthContext {
   currentUser: User | null;
@@ -33,27 +36,50 @@ export interface IAuthContext {
   loading: boolean;
   error: string | null;
   isAuthReady: boolean;
-  viewedProfile: User | null;
-  login: (credentials: LoginCredentials) => Promise<void>;
-  register: (userData: RegisterData) => Promise<void>;
-  signUp: (userData: SignUpData) => Promise<void>;
-  verifyUser: (userData: VerifyUserPayload) => Promise<void>;
-  completeProfileSetup: (userId: string, imageData: FormData) => Promise<void>;
+  viewedProfile: UserPageProfile | null;
+  login: (credentials: LoginData) => Promise<{
+    status: number;
+    success: boolean;
+    message?: string;
+    data?: { user: User; accessToken: string };
+  }>;
+  // register: (userData: RegisterData) => Promise<void>;
+  signUp: (
+    userData: SignUpData
+  ) => Promise<ApiResponse<{ success: boolean; message: string }> | null>;
+  verifyUser: (userData: VerifyUserData) => Promise<{
+    status: number;
+    success: boolean;
+    message?: string;
+    data?: { user: User; accessToken?: string; refreshToken?: string } | null;
+  }>;
+  uniqueUsername: (
+    username: string
+  ) => Promise<ApiResponse<{ success: boolean; message: string }>>;
+  resendVerifyCode: (
+    email: string
+  ) => Promise<ApiResponse<{ success: boolean; message: string }>>;
   logout: () => Promise<void>;
   refreshAuthToken: () => Promise<void>;
   changePassword: (passwordData: ChangePasswordData) => Promise<void>;
-  updateProfile: (
-    updateData: FormData | { fullName?: string; email?: string }
-  ) => Promise<void>;
-  forgotPassword: (payload: ForgotPasswordPayload) => Promise<boolean>;
+  updateAvatar: (avatarData: FormData) => Promise<void>;
+  updateCoverImage: (coverImageData: FormData) => Promise<void>;
+  updateFullName: (fullName: string) => Promise<void>;
+  updateEmail: (email: string) => Promise<void>;
+  forgotPassword: (payload: ForgotPasswordData) => Promise<{
+    status: number;
+    success: boolean;
+    message?: string;
+    data?: { success: boolean; message: string };
+  }>;
   restorePassword: (
     token: string,
-    payload: ResetPasswordPayload
-  ) => Promise<boolean>;
+    payload: ResetPasswordData
+  ) => Promise<{ status: number; success: boolean; message?: string }>;
   clearAuthError: () => void;
   continueWithGoogle: () => void;
   continueWithGithub: () => void;
-  fetchCurrentUser: () => Promise<boolean>;
+  fetchCurrentUser: () => Promise<void>;
   fetchUserProfile: (username: string) => Promise<void>;
 }
 
@@ -107,7 +133,6 @@ export interface IBlogContext {
 export interface BlogProviderProps {
   children: ReactNode;
 }
-
 
 interface mainCategory {
   _id: string; // Use string on the frontend

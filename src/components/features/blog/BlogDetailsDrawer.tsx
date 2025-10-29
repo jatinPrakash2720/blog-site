@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/select";
 import { UploadCloud } from "lucide-react";
 import ThemeToggle from "@/components/common/wrappers/ThemeToggle";
-import type { Blog } from "@/types/api";
+import type { Blog } from "@/types/apisInterfaces/api";
 
 export interface BlogDetailsData {
   title: string;

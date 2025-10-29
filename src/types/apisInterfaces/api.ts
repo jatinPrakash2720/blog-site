@@ -65,7 +65,8 @@ export interface Comment {
 export interface LoginCredentials {
   email?: string;
   username?: string;
-  password?: string;
+  password: string;
+  saveLogin: boolean;
 }
 export interface RegisterData {
   username: string;
@@ -77,10 +78,12 @@ export interface SignUpData {
   username: string;
   email: string;
   password: string;
+  saveLogin: boolean;
 }
 export interface VerifyUserPayload {
   email: string;
   code: string;
+  saveLogin: boolean;
 }
 
 export interface ChangePasswordData {
@@ -129,9 +132,9 @@ export interface GetBlogsParams extends PaginationParams {
   q?: string;
 }
 
-export interface UpdateBlogDetailsPayload{
+export interface UpdateBlogDetailsPayload {
   blogId: string;
-  status: "published" |"draft";
+  status: "published" | "draft";
   thumbnail?: File;
 }
 

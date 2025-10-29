@@ -1,17 +1,17 @@
-import { Routes, Route } from "react-router-dom"
+import { Routes, Route } from "react-router-dom";
 
-import MainLayout from "./components/layout/MainLayout"
-import PublicRoute from "./components/features/route/PublicRoute"
-import PrivateRoute from "./components/features/route/PrivateRoute"
-import { EditorProvider } from "./store/editor"
+import MainLayout from "./components/layout/MainLayout";
+import PublicRoute from "./components/features/route/PublicRoute";
+import PrivateRoute from "./components/features/route/PrivateRoute";
+import { EditorProvider } from "./store/editor";
 
-import HomePage from "./pages/HomePage"
+import HomePage from "./pages/HomePage";
 // import UserProfilePage from "./pages/UserProfilePage";
-import UserProfilePage from "./pages/UserProfilePage"
-import EditorPage from "./pages/EditorPage"
-import AuthPage from "./pages/AuthPage"
-import Loader from "./components/ui/Loader"
-import LandingPage from "./pages/LandingPage"
+import UserProfilePage from "./pages/UserProfilePage";
+import EditorPage from "./pages/EditorPage";
+import AuthPage from "./pages/AuthPage";
+import Loader from "./components/ui/Loader";
+import LandingPage from "./pages/LandingPage";
 
 function App() {
   return (
@@ -106,14 +106,6 @@ function App() {
           }
         />
         <Route
-          path="auth/profile-setup"
-          element={
-            <PublicRoute>
-              <AuthPage mode="profile-setup" />
-            </PublicRoute>
-          }
-        />
-        <Route
           path="auth/forgot-password"
           element={
             <PublicRoute>
@@ -150,7 +142,7 @@ function App() {
       <Route path="/auth/google/callback" element={<Loader />} />
       <Route path="/auth/github/callback" element={<Loader />} />
     </Routes>
-  )
+  );
 }
 
-export default App
+export default App;

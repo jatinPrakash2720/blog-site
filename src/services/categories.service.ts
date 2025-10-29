@@ -1,5 +1,8 @@
 import { apiClient } from "../lib/apiConfig.ts";
-import type { Category, CreateSubCategoryPayload } from "../types/api.ts";
+import type {
+  Category,
+  CreateSubCategoryPayload,
+} from "../types/apisInterfaces/api.ts";
 import type { ApiResponse } from "../types/apiResponse.ts";
 
 export const getTopLevelCategories = () => {
@@ -21,9 +24,9 @@ interface mainCategory {
 }
 
 export const getFilterableSubCategories = () => {
-  return apiClient.get<
-    ApiResponse<mainCategory[]>
-  >(`/categories/filterable-subcategories`);
+  return apiClient.get<ApiResponse<mainCategory[]>>(
+    `/categories/filterable-subcategories`
+  );
 };
 // export const getFilterableSubCategories = (
 //   parentId: string,

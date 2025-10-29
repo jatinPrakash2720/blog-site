@@ -3,7 +3,6 @@
 import React from "react";
 import { Sun, Moon } from "lucide-react";
 import { useTheme } from "../../../store/theme";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 interface ThemeToggleProps {
@@ -14,21 +13,17 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({ className }) => {
   const { toggleTheme } = useTheme();
 
   return (
-    <Button
+    <button
       onClick={toggleTheme}
-      variant="ghost" // Use the transparent ghost variant
-      size="icon" // Use the standard icon button size
       className={cn(
-        // This allows the parent component (Header) to pass down
-        // dynamic hover and color classes for a consistent look.
-        "relative",
+        "p-2 rounded-full text-white bg-black/20 hover:bg-black/40 transition-colors relative",
         className
       )}
       aria-label="Toggle theme"
     >
       <Sun className="h-5 w-5 transition-all scale-100 rotate-0 dark:scale-0 dark:-rotate-90" />
-      <Moon className="absolute h-5 w-5 transition-all scale-0 rotate-90 dark:scale-100 dark:rotate-0" />
-    </Button>
+      <Moon className="absolute h-5 w-5 transition-all scale-0 rotate-90 dark:scale-100 dark:rotate-0 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+    </button>
   );
 };
 

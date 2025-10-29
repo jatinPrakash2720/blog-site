@@ -1,5 +1,6 @@
 import React from "react";
 import { Outlet } from "react-router-dom";
+import { Toaster } from "../ui/sonner";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -10,18 +11,18 @@ interface MainLayoutProps {
  * It renders the primary page content (passed as `children`) and provides an
  * <Outlet> for nested routes, such as the blog editor drawer, to appear on top.
  */
- 
+
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
-  
   return (
-    <div className="min-h-screen bg-white dark:bg-black">
+    <div className="min-h-screen bg-transparent">
       {/* The main page content (e.g., HomePage) is rendered here. */}
       {children}
+      <Toaster />
 
       {/* The <Outlet> is a placeholder. When you navigate to a nested
           route like "/home/write", the EditorPage will be rendered here,
           ON TOP of the HomePage, creating the modal effect. */}
-      
+
       <Outlet />
     </div>
   );

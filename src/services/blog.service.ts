@@ -1,34 +1,35 @@
 import { apiClient } from "../lib/apiConfig.ts";
-import type * as apiInterfaces from "../types/api.ts";
+import type * as apiInterfaces from "../types/apisInterfaces/api.ts";
 import type { ApiResponse } from "../types/apiResponse.ts";
 
 export const getBlogs = (params: apiInterfaces.GetBlogsParams = {}) => {
-  return apiClient.get<
-    ApiResponse<apiInterfaces.PaginatedBlogResponse >
-  >("/blogs", { params });
+  return apiClient.get<ApiResponse<apiInterfaces.PaginatedBlogResponse>>(
+    "/blogs",
+    { params }
+  );
 };
 
 export const getBlog = (blogId: string) => {
-  return apiClient.get<ApiResponse<apiInterfaces.Blog>>(
-    `/blogs/${blogId}`
-  );
+  return apiClient.get<ApiResponse<apiInterfaces.Blog>>(`/blogs/${blogId}`);
 };
 
-export const createBlog = (data: { title: string; content:string}) => {
-  return apiClient.post<ApiResponse<apiInterfaces.Blog >>(
-    "/blogs",
-    data
-  );
+export const createBlog = (data: { title: string; content: string }) => {
+  return apiClient.post<ApiResponse<apiInterfaces.Blog>>("/blogs", data);
 };
 
-export const updateBlogDetails = ({ blogId, status, thumbnail, }: apiInterfaces.UpdateBlogDetailsPayload) => {
+export const updateBlogDetails = ({
+  blogId,
+  status,
+  thumbnail,
+}: apiInterfaces.UpdateBlogDetailsPayload) => {
   const formData = new FormData();
   formData.append("status", status);
   if (thumbnail) {
     formData.append("thumbnail", thumbnail);
   }
   return apiClient.patch<ApiResponse<{ data: apiInterfaces.Blog }>>(
-    `/blogs/${blogId}/details`, formData
+    `/blogs/${blogId}/details`,
+    formData
   );
 };
 
@@ -74,9 +75,10 @@ export const getBlogsByTopLevelCategory = (
   categoryId: string,
   params: apiInterfaces.GetBlogsParams = {}
 ) => {
-  return apiClient.get<
-    ApiResponse<apiInterfaces.PaginatedBlogResponse >
-  >(`/blogs/by-category/${categoryId}`, { params });
+  return apiClient.get<ApiResponse<apiInterfaces.PaginatedBlogResponse>>(
+    `/blogs/by-category/${categoryId}`,
+    { params }
+  );
 };
 
 export const getBlogsBySubCategory = (

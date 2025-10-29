@@ -42,8 +42,8 @@
   }
 
   ::selection {
-    background: #ffc200; /* Use any hex color */
-    color: #000000; /* Use any hex color */
+    background: #000000; /* Black background */
+    color: #ffffff; /* White text for contrast */
   }
   *,
   *::before,
@@ -79,10 +79,36 @@
   }
 
   body {
-    background-color: hsl(var(--background));
+    background: linear-gradient(to top, #e6e9f0 0%, #eef1f5 100%);
+    background-attachment: fixed;
     color: hsl(var(--foreground));
     font-family: Inter, sans-serif;
   }
+
+  .dark body {
+    background: linear-gradient(to right, #434343 0%, black 100%);
+  }
+
+  /* Override browser autofill styling */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px rgb(244 244 245) inset !important;
+    -webkit-text-fill-color: hsl(var(--foreground)) !important;
+    transition: background-color 5000s ease-in-out 0s !important;
+  }
+
+  .dark input:-webkit-autofill,
+  .dark input:-webkit-autofill:hover,
+  .dark input:-webkit-autofill:focus,
+  .dark input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px rgb(39 39 42) inset !important;
+    -webkit-text-fill-color: hsl(var(--foreground)) !important;
+    transition: background-color 5000s ease-in-out 0s !important;
+  }
+
+  /* Handle input focus without autofill */
 
   /* Custom animation class for fade-slide-in */
   .animate-fade-slide-in {

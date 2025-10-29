@@ -1,38 +1,46 @@
 "use client";
-
-import type React from "react";
-import { useState, useEffect } from "react";
-import { RefreshCw } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
 import { useLocation } from "react-router-dom";
-import type { OTPVerificationPageProps } from "@/types/components/features/auth";
-import { OTPInput } from "@/components/common/subComps/OTPInputs";
-import { Button } from "@/components/common/wrappers/Button";
-import { useTheme } from "@/store/theme";
+import { Button } from "@/components/ui/button";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+} from "@/components/ui/input-otp";
 import { useAuth } from "@/store/auth";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { otpSchema } from "@/schemas/otpSchema";
+import * as z from "zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+} from "@/components/ui/form";
+import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
 
-export const OTPVerificationPage: React.FC<OTPVerificationPageProps> = ({
-  title = (
-    <span className="font-light text-foreground tracking-tighter">
-      Verify Your Email
-    </span>
-  ),
-  description = "We've sent a verification code to your email address",
-  email = "user@example.com",
-  onResendCode,
-  codeLength = 6,
-}) => {
-  const [otp, setOtp] = useState("");
+export const OTPVerificationPage = () => {
   const [isResending, setIsResending] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [countdown, setCountdown] = useState(0);
-  const [error, setError] = useState("");
 
   const location = useLocation();
-  const theme = useTheme();
-  const { verifyUser } = useAuth();
+  const { verifyUser, resendVerifyCode } = useAuth();
 
   // Get email from location state
-  const userEmail = location.state?.email || email;
+  const userEmail = location.state?.email|| "user@example.com";
+  const saveLogin = location.state?.saveLogin || false;
+
+  const form = useForm<z.infer<typeof otpSchema>>({
+    resolver: zodResolver(otpSchema),
+    defaultValues: {
+      otp: "",
+    },
+  });
 
   useEffect(() => {
     if (countdown > 0) {
@@ -41,29 +49,25 @@ export const OTPVerificationPage: React.FC<OTPVerificationPageProps> = ({
     }
   }, [countdown]);
 
-  const handleOTPComplete = (otpValue: string) => {
-    setOtp(otpValue);
-  };
-
-  const handleVerify = async () => {
-    if (otp.length !== codeLength) return;
-
+  const handleVerify = async (values: z.infer<typeof otpSchema>) => {
     setIsVerifying(true);
-    setError("");
 
     try {
-      await verifyUser({
+      const response = await verifyUser({
         email: userEmail,
-        code: otp,
+        code: values.otp,
+        saveLogin: saveLogin,
       });
-      // The verifyUser function from auth store handles everything
-      // including setting localStorage and navigation
+      if (!response?.success) {
+        toast.error(response?.message);
+      }
     } catch (error: any) {
       console.error("Verification error:", error);
-      setError(
-        error.response?.data?.message ||
-          "Verification failed. Please try again."
-      );
+      form.setError("otp", {
+        message:
+          error.response?.data?.message ||
+          "Verification failed. Please try again.",
+      });
     } finally {
       setIsVerifying(false);
     }
@@ -76,72 +80,96 @@ export const OTPVerificationPage: React.FC<OTPVerificationPageProps> = ({
     setCountdown(60); // 60 second cooldown
 
     try {
-      await onResendCode?.();
+      const response = await resendVerifyCode(userEmail);
+      if (!response?.success) {
+        toast.error(response?.message);
+      }
+      toast.success(response?.message);
+    } catch (error) {
+      console.error("Resend code error:", error);
     } finally {
       setIsResending(false);
     }
   };
 
   return (
-    <div className="h-[100vh] flex flex-col md:flex-row font-sans w-[100vw] flex-1 items-center justify-center p-4 overflow-hidden ">
-      {/* Left column: OTP verification form */}
-      <div className="w-full max-w-md hover:shadow-3xl px-8 py-4 bg-white/50 dark:bg-black/40 backdrop-blur-xl border dark:border-white/10 border-black/10 rounded-[32px] shadow-2xl transform transition-all duration-300 hover:shadow-3xl">
-        <div className="flex flex-col items-start gap-6">
-          <h1 className=" text-4xl md:text-5xl font-semibold leading-tight text-center w-full">
-            {title}
+    <div className="h-screen flex flex-col md:flex-row font-sans w-screen flex-1 items-center justify-center p-4 overflow-hidden">
+      <div className="w-full max-w-lg py-8 px-10  bg-white dark:bg-zinc-950  border dark:border-zinc-800/60 border-zinc-200/60 rounded-[32px] shadow-2xl transform transition-all duration-300 hover:shadow-3xl">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-semibold leading-tight text-foreground dark:text-muted-foreground">Verify Your Email
           </h1>
 
-          <div className=" w-full flex flex-col items-center">
-            <p className="text-muted-foreground text-center ">{description}</p>
-            <p className="text-sm text-foreground/80 mt-1 text-center">
-              Sent to <span className="font-medium">{userEmail}</span>
-            </p>
-          </div>
+          <p className=" lg:py-2 py-1 text-foreground dark:text-muted-foreground text-sm md:text-base lg:text-lg">
+            We've sent a verification code to your email address
+          </p>
 
-          <div className="w-full space-y-6">
-            <div>
-              <label className="text-sm font-medium text-muted-foreground block mb-4 text-center">
-                Enter {codeLength}-digit verification code
-              </label>
-              <OTPInput length={codeLength} onComplete={handleOTPComplete} />
-            </div>
-
-            {error && (
-              <div className="text-red-500 text-sm text-center bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">
-                {error}
-              </div>
-            )}
-
-            <Button
-              intent={theme.theme === "dark" ? "authd" : "authl"}
-              size="auth"
-              onClick={handleVerify}
-              disabled={otp.length !== codeLength || isVerifying}
-              className="animate-element animate-delay-500"
+          <p className=" text-sm font-medium text-foreground/80">
+            Sent to <span className="font-medium">{userEmail}</span>
+          </p>
+          <Separator />
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(handleVerify)}
+              className="space-y-5"
             >
-              {isVerifying ? "Verifying..." : "Verify Code"}
-            </Button>
-          </div>
-
-          <div className="text-center w-full">
-            <p className="text-sm text-muted-foreground mb-3">
-              Didn't receive the code?
-            </p>
-            <button
-              onClick={handleResend}
-              disabled={countdown > 0 || isResending}
-              className="flex items-center gap-2 text-sky-600 hover:text-sky-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mx-auto"
-            >
-              <RefreshCw
-                className={`w-4 h-4 ${isResending ? "animate-spin" : ""}`}
+              <FormField
+                control={form.control}
+                name="otp"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm md:text-base lg:text-lg font-medium text-foreground dark:text-muted-foreground mb-2 block text-start">
+                      Enter 6-digit verification code
+                    </FormLabel>
+                    <FormControl>
+                      <InputOTP maxLength={6} {...field} disabled={isVerifying}>
+                        <InputOTPGroup className="flex w-full gap-2">
+                          {Array.from({ length: 6 }).map((_, index) => (
+                            <InputOTPSlot
+                              key={index}
+                              index={index}
+                              className="h-12 md:h-13 lg:h-14 flex-1 text-lg border-2 rounded-xl "
+                            />
+                          ))}
+                        </InputOTPGroup>
+                      </InputOTP>
+                    </FormControl>
+                    {/* <FormMessage className="text-center" /> */}
+                  </FormItem>
+                )}
               />
-              {countdown > 0 ? `Resend in ${countdown}s` : "Resend Code"}
-            </button>
+
+              <Button
+                type="submit"
+                disabled={isVerifying}
+                className=" w-full rounded-2xl p-3 text-base font-medium h-auto bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isVerifying ? (
+                  <>
+                    <Loader2 className="animate-spin" /> Please wait
+                  </>
+                ) : (
+                  "Verify Code"
+                )}
+              </Button>
+            </form>
+          </Form>
+
+          <div className=" flex items-center justify-end text-center mt-2">
+            <p className="text-sm text-muted-foreground">
+              Didn't receive the code?{" "}
+              <button
+                onClick={handleResend}
+                disabled={countdown > 0 || isResending}
+                className="text-blue-500 hover:underline transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {countdown > 0 ? `Resend in ${countdown}s` : "Resend Code"}
+              </button>
+            </p>
           </div>
 
-          <div className=" w-full text-center text-xs text-muted-foreground">
-            <p>Check your spam folder if you don't see the email</p>
-          </div>
+          <p className=" text-end text-xs text-muted-foreground">
+            Check your spam folder if you don't see the email
+          </p>
         </div>
       </div>
     </div>

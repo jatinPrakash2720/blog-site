@@ -1,8 +1,8 @@
 "use client";
 
-import {Button} from "@/components/common/wrappers/Button";
+import { Button } from "@/components/common/wrappers/Button";
 import { cn } from "@/lib/utils";
-import type { Blog } from "@/types/api";
+import type { Blog } from "@/types/apisInterfaces/api";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Clock } from "lucide-react";
 import type React from "react";
@@ -25,7 +25,9 @@ const TrendingBlog: React.FC<TrendingBlogProps> = ({ blogs, isLoading }) => {
 
   const prevPage = () => {
     if (blogs && blogs.length > 0) {
-      setCurrentIndex((prevIndex) => (prevIndex - 1 + blogs.length) % blogs.length);
+      setCurrentIndex(
+        (prevIndex) => (prevIndex - 1 + blogs.length) % blogs.length
+      );
     }
   };
   useEffect(() => {

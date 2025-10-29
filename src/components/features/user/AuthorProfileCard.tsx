@@ -1,7 +1,7 @@
 import React from "react";
-import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
-import {Button} from "@/components/common/wrappers/Button";
-import type { User } from "@/types/api";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/common/wrappers/Button";
+import type { User } from "@/types/apisInterfaces/api";
 
 interface AuthorProfileCardProps {
   author: User;
@@ -9,8 +9,7 @@ interface AuthorProfileCardProps {
 
 const AuthorProfileCard: React.FC<AuthorProfileCardProps> = ({ author }) => {
   const getInitials = (name: string) => {
-
-    if (!name || typeof name !== 'string') {
+    if (!name || typeof name !== "string") {
       return "?";
     }
     return name

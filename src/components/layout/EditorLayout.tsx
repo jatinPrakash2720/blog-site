@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 import ThemeToggle from "../common/wrappers/ThemeToggle";
+import { Toaster } from "../ui/sonner";
 
 interface EditorLayoutProps {
   children: React.ReactNode;
@@ -41,6 +42,7 @@ const EditorLayout: React.FC<EditorLayoutProps> = ({ children }) => {
 
         {/* This is where the drawer or editor will be rendered */}
         {children}
+        <Toaster />
       </div>
     </AnimatePresence>
   );

@@ -4,7 +4,7 @@ import * as commentService from "../services/comment.service.ts";
 import * as saveService from "../services/save.service.ts";
 
 import * as contextInterfaces from "../types/context.ts";
-import * as apiInterfaces from "../types/api.ts";
+import * as apiInterfaces from "../types/apisInterfaces/api.ts";
 import React, { createContext, useCallback, useContext, useState } from "react";
 import { requestHandler } from "../lib/requestHandler.ts";
 
@@ -252,7 +252,11 @@ export const SocialProvider: React.FC<
     toggleSaveToCollection,
     updateSaveCollection,
     deleteSaveCollection,
-    };
-    
-    return <SocialContext.Provider value={contextValue}>{children}</SocialContext.Provider>
+  };
+
+  return (
+    <SocialContext.Provider value={contextValue}>
+      {children}
+    </SocialContext.Provider>
+  );
 };

@@ -1,22 +1,22 @@
-import React, { useState, useEffect } from "react"
-import { useAuth } from "@/store/auth"
-import { useSocial } from "@/store/social"
-import { getUserBlogs } from "@/services/user.service"
-import { getBlogsInCollection } from "@/services/save.service"
-import { useBlogs } from "@/store/blog"
-import { useCategories } from "@/store/category"
-import type { Blog } from "@/types/api"
-import Header from "@/components/layout/Header"
-import Loader from "@/components/ui/Loader"
-import FeatureBar from "@/components/features/blog/FeatureBar"
-import TrendingBlog from "@/components/features/blog/TrendingBlog"
-import Trending from "@/components/features/blog/Trending"
-import FollowSuggestions from "@/components/features/user/FollowSuggestions"
-import BlogList from "@/components/features/blog/BlogList"
+import React, { useState, useEffect } from "react";
+import { useAuth } from "@/store/auth";
+import { useSocial } from "@/store/social";
+import { getUserBlogs } from "@/services/user.service";
+import { getBlogsInCollection } from "@/services/save.service";
+import { useBlogs } from "@/store/blog";
+import { useCategories } from "@/store/category";
+import type { Blog } from "@/types/apisInterfaces/api";
+import Header from "@/components/layout/Header";
+import Loader from "@/components/ui/Loader";
+import FeatureBar from "@/components/features/blog/FeatureBar";
+import TrendingBlog from "@/components/features/blog/TrendingBlog";
+import Trending from "@/components/features/blog/Trending";
+import FollowSuggestions from "@/components/features/user/FollowSuggestions";
+import BlogList from "@/components/features/blog/BlogList";
 import {
   LayoutToggle,
   type LayoutType,
-} from "@/components/common/subComps/layout-toggle"
+} from "@/components/common/subComps/layout-toggle";
 
 // Icons - using Lucide React instead of Heroicons
 import {
@@ -34,7 +34,7 @@ import {
   Settings,
   Home,
   Tag,
-} from "lucide-react"
+} from "lucide-react";
 
 export type SidebarSection =
   | "saved"
@@ -44,41 +44,41 @@ export type SidebarSection =
   | "history"
   | "liked"
   | "explore"
-  | "settings"
+  | "settings";
 
 interface SidebarItem {
-  id: string
-  name: string
-  icon: React.ReactNode
-  count?: number
-  type: SidebarSection
-  collectionId?: string
-  isDefault?: boolean
+  id: string;
+  name: string;
+  icon: React.ReactNode;
+  count?: number;
+  type: SidebarSection;
+  collectionId?: string;
+  isDefault?: boolean;
 }
 
 const UserProfilePage: React.FC = () => {
-  const { currentUser } = useAuth()
-  const { collections, fetchCollections, loading: socialLoading } = useSocial()
-  const [activeSection, setActiveSection] = useState<SidebarSection>("saved")
-  const [draftBlogs, setDraftBlogs] = useState<Blog[]>([])
-  const [savedBlogs, setSavedBlogs] = useState<Blog[]>([])
+  const { currentUser } = useAuth();
+  const { collections, fetchCollections, loading: socialLoading } = useSocial();
+  const [activeSection, setActiveSection] = useState<SidebarSection>("saved");
+  const [draftBlogs, setDraftBlogs] = useState<Blog[]>([]);
+  const [savedBlogs, setSavedBlogs] = useState<Blog[]>([]);
   const [collectionBlogs, setCollectionBlogs] = useState<{
-    [key: string]: Blog[]
-  }>({})
-  const [loading, setLoading] = useState(true)
-  const [sidebarOpen, setSidebarOpen] = useState(false) // Start closed on mobile
-  const [isMobile, setIsMobile] = useState(false)
+    [key: string]: Blog[];
+  }>({});
+  const [loading, setLoading] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false); // Start closed on mobile
+  const [isMobile, setIsMobile] = useState(false);
   const [selectedCollectionId, setSelectedCollectionId] = useState<
     string | null
-  >(null)
+  >(null);
 
   // Explore section state
-  const [activeFilter, setActiveFilter] = useState<string>("for-you")
-  const [layout, setLayout] = useState<LayoutType>("square")
+  const [activeFilter, setActiveFilter] = useState<string>("for-you");
+  const [layout, setLayout] = useState<LayoutType>("square");
   const [menuItems, setMenuItems] = useState([
     { slug: "for-you", label: "For You", icon: Home },
     { slug: "explore", label: "Explore", icon: Compass },
-  ])
+  ]);
 
   // Blog store hooks
   const {
@@ -86,62 +86,62 @@ const UserProfilePage: React.FC = () => {
     loading: blogLoading,
     fetchAllBlogs,
     fetchFollowingFeed,
-  } = useBlogs()
+  } = useBlogs();
   const { filterableSubCategories, fetchFilterableSubCategories } =
-    useCategories()
+    useCategories();
 
   // Check if mobile on mount and resize
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 1024)
+      setIsMobile(window.innerWidth < 1024);
       if (window.innerWidth < 1024) {
-        setSidebarOpen(false)
+        setSidebarOpen(false);
       } else {
-        setSidebarOpen(true)
+        setSidebarOpen(true);
       }
-    }
+    };
 
-    checkMobile()
-    window.addEventListener("resize", checkMobile)
-    return () => window.removeEventListener("resize", checkMobile)
-  }, [])
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   // Fetch user collections and blogs
   useEffect(() => {
     const fetchUserData = async () => {
-      if (!currentUser?._id) return
+      if (!currentUser?._id) return;
 
       try {
-        setLoading(true)
+        setLoading(true);
 
         // Fetch collections using social store
-        await fetchCollections()
+        await fetchCollections();
 
         // Fetch user's draft blogs
         const draftResponse = await getUserBlogs({
           userId: currentUser._id,
           page: 1,
           limit: 50,
-        })
+        });
 
         if (draftResponse.data.success) {
-          const userBlogs = draftResponse.data.data.blogs
-          const drafts = userBlogs.filter((blog) => blog.status === "draft")
+          const userBlogs = draftResponse.data.data.blogs;
+          const drafts = userBlogs.filter((blog) => blog.status === "draft");
           const published = userBlogs.filter(
             (blog) => blog.status === "published"
-          )
-          setDraftBlogs(drafts)
-          setSavedBlogs(published) // For now, treating published as "saved"
+          );
+          setDraftBlogs(drafts);
+          setSavedBlogs(published); // For now, treating published as "saved"
         }
       } catch (error) {
-        console.error("Error fetching user data:", error)
+        console.error("Error fetching user data:", error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchUserData()
-  }, [currentUser?._id, fetchCollections])
+    fetchUserData();
+  }, [currentUser?._id, fetchCollections]);
 
   // Fetch explore data
   useEffect(() => {
@@ -150,14 +150,14 @@ const UserProfilePage: React.FC = () => {
         fetchFilterableSubCategories(),
         fetchAllBlogs({ page: 1, limit: 10 }),
         fetchFollowingFeed({ page: 1, limit: 10 }),
-      ])
+      ]);
     }
   }, [
     activeSection,
     fetchFilterableSubCategories,
     fetchAllBlogs,
     fetchFollowingFeed,
-  ])
+  ]);
 
   // Update menu items when categories are loaded
   useEffect(() => {
@@ -166,35 +166,35 @@ const UserProfilePage: React.FC = () => {
         slug: cat.slug,
         label: cat.name,
         icon: Tag,
-      }))
+      }));
       setMenuItems([
         { slug: "for-you", label: "For You", icon: Home },
         { slug: "explore", label: "Explore", icon: Compass },
         ...categoryItems,
-      ])
+      ]);
     }
-  }, [filterableSubCategories])
+  }, [filterableSubCategories]);
 
   // Function to handle collection selection
   const handleCollectionSelect = async (collectionId: string) => {
-    setSelectedCollectionId(collectionId)
-    setActiveSection("custom")
+    setSelectedCollectionId(collectionId);
+    setActiveSection("custom");
 
     // Fetch blogs for this collection if not already loaded
     if (!collectionBlogs[collectionId]) {
       try {
-        const response = await getBlogsInCollection(collectionId)
+        const response = await getBlogsInCollection(collectionId);
         if (response.data.success) {
           setCollectionBlogs((prev) => ({
             ...prev,
             [collectionId]: response.data.data.data.blogs,
-          }))
+          }));
         }
       } catch (error) {
-        console.error("Error fetching collection blogs:", error)
+        console.error("Error fetching collection blogs:", error);
       }
     }
-  }
+  };
 
   // Create sidebar items
   const sidebarItems: SidebarItem[] = [
@@ -257,32 +257,32 @@ const UserProfilePage: React.FC = () => {
       collectionId: collection._id,
       isDefault: false,
     })),
-  ]
+  ];
 
   const renderMainContent = () => {
     const getSectionTitle = () => {
       switch (activeSection) {
         case "saved":
-          return "Saved Blogs"
+          return "Saved Blogs";
         case "draft":
-          return "Draft Blogs"
+          return "Draft Blogs";
         case "history":
-          return "Reading History"
+          return "Reading History";
         case "liked":
-          return "Liked Blogs"
+          return "Liked Blogs";
         case "explore":
-          return "Explore"
+          return "Explore";
         case "settings":
-          return "Settings"
+          return "Settings";
         case "custom":
           const currentCollection = (collections || []).find(
             (c) => c._id === selectedCollectionId
-          )
-          return currentCollection ? currentCollection.name : "Collection"
+          );
+          return currentCollection ? currentCollection.name : "Collection";
         default:
-          return "Profile"
+          return "Profile";
       }
-    }
+    };
 
     const getSectionContent = () => {
       switch (activeSection) {
@@ -330,7 +330,7 @@ const UserProfilePage: React.FC = () => {
                 Start saving blogs you want to read later
               </p>
             </div>
-          )
+          );
 
         case "draft":
           return (draftBlogs || []).length > 0 ? (
@@ -376,7 +376,7 @@ const UserProfilePage: React.FC = () => {
                 Start writing your first blog post
               </p>
             </div>
-          )
+          );
 
         case "history":
           return (
@@ -389,7 +389,7 @@ const UserProfilePage: React.FC = () => {
                 Your reading history will appear here
               </p>
             </div>
-          )
+          );
 
         case "liked":
           return (
@@ -402,7 +402,7 @@ const UserProfilePage: React.FC = () => {
                 Like blogs to see them here
               </p>
             </div>
-          )
+          );
 
         case "explore":
           return (
@@ -441,7 +441,7 @@ const UserProfilePage: React.FC = () => {
                 </div>
               </section>
             </div>
-          )
+          );
 
         case "settings":
           return (
@@ -547,7 +547,7 @@ const UserProfilePage: React.FC = () => {
                 </div>
               </div>
             </div>
-          )
+          );
 
         case "custom":
           if (!selectedCollectionId) {
@@ -561,13 +561,13 @@ const UserProfilePage: React.FC = () => {
                   Choose a collection from the sidebar to view its blogs
                 </p>
               </div>
-            )
+            );
           }
 
           const currentCollection = (collections || []).find(
             (c) => c._id === selectedCollectionId
-          )
-          const blogs = collectionBlogs[selectedCollectionId] || []
+          );
+          const blogs = collectionBlogs[selectedCollectionId] || [];
 
           return blogs.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -612,7 +612,7 @@ const UserProfilePage: React.FC = () => {
                 No blogs in this collection yet
               </p>
             </div>
-          )
+          );
 
         default:
           return (
@@ -625,9 +625,9 @@ const UserProfilePage: React.FC = () => {
                 Profile information will be displayed here
               </p>
             </div>
-          )
+          );
       }
-    }
+    };
 
     return (
       <div className="p-6">
@@ -649,15 +649,15 @@ const UserProfilePage: React.FC = () => {
         </div>
         {getSectionContent()}
       </div>
-    )
-  }
+    );
+  };
 
   if (loading || socialLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader />
       </div>
-    )
+    );
   }
 
   if (!currentUser) {
@@ -667,11 +667,11 @@ const UserProfilePage: React.FC = () => {
           Please log in to view your profile.
         </p>
       </div>
-    )
+    );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-transparent">
       <Header isEditorMode={true} />
 
       <div className="flex relative">
@@ -825,7 +825,7 @@ const UserProfilePage: React.FC = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default UserProfilePage
+export default UserProfilePage;
