@@ -18,8 +18,8 @@ import {
 
 const getBlogs = asyncHandler(async (req, res) => {
   try {
-    const page = parseInt(req.query.page, 10) || 1;
-    const limit = parseInt(req.query.limit, 10) || 10;
+    const page = parseInt(req.query.page, 9) || 1;
+    const limit = parseInt(req.query.limit, 9) || 10;
     const sortBy = req.query.sortBy || "createdAt";
     const sortOrder = req.query.sortOrder === "asc" ? 1 : -1;
     const searchQuery = req.query.q;
@@ -130,8 +130,27 @@ const getBlogs = asyncHandler(async (req, res) => {
     );
   }
 });
+const getSearchedBlog = asyncHandler(async (req, res) => {
+  const { blogId } = req.params;
 
-const getBlog = asyncHandler(async (req, res) => {
+  const blog = await Blog.findById(blogId);
+
+  if (!blog) {
+    throw new ApiError(404, "Blog post not found");
+  }
+  console.log("blog :",blog)
+  if (!blog.isPublished || blog.isDeleted) {
+    throw new ApiError(404, "Blog not found or not accessible");
+  }
+  
+  blog.views = (blog.views || 0) + 1;
+  await blog.save({ validateBeforeSave: false });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, blog, "Blog fetched Successfully"));
+});
+const getBlogByOwner = asyncHandler(async (req, res) => {
   try {
     const { blogId } = req.params;
 
@@ -143,13 +162,8 @@ const getBlog = asyncHandler(async (req, res) => {
     const isOwner =
       req.user && blog.owner.toString() === req.user._id.toString();
 
-    if (!isOwner && (!blog.isPublished || blog.isDeleted)) {
-      throw new ApiError(404, "Blog not found or not accessible.");
-    }
-
     if (!isOwner) {
-      blog.views = (blog.views || 0) + 1;
-      await blog.save({ validateBeforeSave: false });
+      throw new ApiError(404, "Blog not found or not accessible.");
     }
     return res
       .status(200)
@@ -159,15 +173,18 @@ const getBlog = asyncHandler(async (req, res) => {
     if (error instanceof ApiError) {
       throw error;
     }
-    throw new ApiError(500, error.message || "Internal Server error");
+    throw new ApiError(
+      500,
+      error.message || "Internal Server error in getBlog"
+    );
   }
 });
 
 const getBlogsByUserId = asyncHandler(async (req, res) => {
   try {
     const { userId } = req.params;
-    const page = parseInt(req.query.page, 10) || 1;
-    const limit = parseInt(req.query.limit, 10) || 1;
+    const page = parseInt(req.query.page, 9) || 1;
+    const limit = parseInt(req.query.limit, 9) || 1;
     const sortBy = req.query.sortBy || "createdAt";
     const sortOrder = req.query.sortOrder === "asc" ? 1 : -1;
 
@@ -246,7 +263,7 @@ const createBlog = asyncHandler(async (req, res) => {
     throw new ApiError(400, "All Fields are required"); // Corrected typo
   }
 
-   const contentObject = JSON.parse(content);
+  const contentObject = JSON.parse(content);
   const slug = generateSlug(title);
   const excerpt = generateExcerpt(contentObject);
   console.log(excerpt);
@@ -757,7 +774,8 @@ const getFollowingFeed = asyncHandler(async (req, res) => {
 
 export {
   getBlogs,
-  getBlog,
+  getSearchedBlog,
+  getBlogByOwner,
   getBlogsByUserId,
   createBlog,
   updateBlogDetails,

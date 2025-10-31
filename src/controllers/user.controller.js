@@ -124,10 +124,10 @@ const verifyUser = asyncHandler(async (req, res) => {
   console.log("isCodeValid :", isCodeValid);
   console.log("isCodeExpired :", isCodeExpired);
 
-  if(!isCodeValid){
+  if (!isCodeValid) {
     throw new ApiError(402, "Invalid code");
   }
-  if(isCodeExpired){
+  if (isCodeExpired) {
     throw new ApiError(403, "Code expired");
   }
   if (isCodeValid && !isCodeExpired) {
@@ -210,14 +210,40 @@ const loginUser = asyncHandler(async (req, res) => {
   aur cookies mein kr denge, with options
   */
   const { identifier, password } = req.body;
-  console.log(password);
+  console.log("identifier :", identifier);
+  console.log("password :", password);
   if (!identifier) {
     throw new ApiError(400, "email is required");
   }
-  const user = await User.findOne( { $or: [{ email: identifier }, { username: identifier }] });
+  const user = await User.findOne({
+    $or: [{ email: identifier }, { username: identifier }],
+  });
   console.log(user);
   if (!user) {
     throw new ApiError(404, "User does not exists");
+  }
+  // If the account was created via OAuth (google/github), redirect to the correct provider
+  if (user.googleId) {
+    return res
+      .status(409)
+      .json(
+        new ApiResponse(
+          409,
+          { provider: "google" },
+          "Account uses OAuth. Redirect to Google sign in."
+        )
+      );
+  }
+  if (user.githubId) {
+    return res
+      .status(408)
+      .json(
+        new ApiResponse(
+          408,
+          { provider: "github" },
+          "Account uses OAuth. Redirect to Github sign in."
+        )
+      );
   }
   const isPasswordValid = await user.isPasswordCorrect(password);
   console.log(isPasswordValid);
@@ -671,8 +697,11 @@ const loginWithGoogle = asyncHandler(async (req, res) => {
   const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
     user._id
   );
+
   const redirectOrigin = process.env.DEPLOYE_URL;
   // const redirectOrigin = process.env.CORS_ORIGIN.split(",")[0];
+  // const redirectOrigin = process.env.LOCAL_BACKEND_URL;
+
   const redirectURL = `${redirectOrigin}/auth/google/callback`;
 
   console.log("Redirecting to:", redirectURL);
@@ -724,6 +753,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
 
   // const resetUrl = `${process.env.DEPLOYE_URL}/auth/restore-password/${resetToken}`;
   const resetUrl = `http://localhost:3000/auth/restore-password/${resetToken}`;
+  console.log("reset Url: ,", resetUrl);
   const message = `You requested a password reset. Plic click this link to reset your password: \n\n ${resetUrl} \n\nIf you did not request this, ignore this email.`;
   try {
     const emailResponse = await sendEmail(
@@ -788,20 +818,26 @@ const restorePassword = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .json(
-      new ApiResponse(200, {}, "Password reset successfully. Redirecting to sign in...")
+      new ApiResponse(
+        200,
+        {},
+        "Password reset successfully. Redirecting to sign in..."
+      )
     );
 });
-const uniqueUsername = asyncHandler (async (req,res)=>{
-  const {username} = req.body;
-  if(!username){
+const uniqueUsername = asyncHandler(async (req, res) => {
+  const { username } = req.body;
+  if (!username) {
     throw new ApiError(400, "Username is required");
   }
-  const user = await User.findOne({username: username});
-  if(user){
-    throw new ApiError(404,"Username is not available")
+  const user = await User.findOne({ username: username });
+  if (user) {
+    throw new ApiError(404, "Username is not available");
   }
-  return res.status(200).json(new ApiResponse(200, {}, "Username is available"));
-})
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Username is available"));
+});
 
 export {
   signUpUser,
