@@ -1,22 +1,24 @@
 import { Routes, Route } from "react-router-dom";
+import { lazy, Suspense } from "react";
 
 import MainLayout from "./components/layout/MainLayout";
 import PublicRoute from "./components/features/route/PublicRoute";
 import PrivateRoute from "./components/features/route/PrivateRoute";
 import { EditorProvider } from "./store/editor";
 
-import HomePage from "./pages/HomePage";
+// Lazy load HomePage for better performance
+const HomePage = lazy(() => import("./pages/HomePage"));
 // import UserProfilePage from "./pages/UserProfilePage";
 import UserProfilePage from "./pages/UserProfilePage";
 import EditorPage from "./pages/EditorPage";
 import AuthPage from "./pages/AuthPage";
 import Loader from "./components/ui/Loader";
 import LandingPage from "./pages/LandingPage";
+import PreviewPage from "./pages/RepresentationPage";
 
 function App() {
   return (
     <Routes>
-      {/* Private Routes with EditorProvider */}
       <Route
         path="/*"
         element={
@@ -27,12 +29,23 @@ function App() {
                 element={
                   <PrivateRoute>
                     <MainLayout>
-                      <HomePage />
+                      <Suspense fallback={<Loader />}>
+                        <HomePage />
+                      </Suspense>
                     </MainLayout>
                   </PrivateRoute>
                 }
               />
-
+              <Route
+                path="/preview/:blogId"
+                element={
+                  <PrivateRoute>
+                    <MainLayout>
+                      <PreviewPage />
+                    </MainLayout>
+                  </PrivateRoute>
+                }
+              />
               <Route
                 path="/editor"
                 element={
@@ -42,7 +55,6 @@ function App() {
                 }
               />
 
-              {/* New User Profile Page with YouTube-style sidebar */}
               <Route
                 path="/profile"
                 element={
@@ -51,34 +63,11 @@ function App() {
                   </PrivateRoute>
                 }
               />
-
-              {/* Demo page for UserProfilePageNew */}
-
-              {/* <Route
-                path="/profile"
-                element={
-                  <PrivateRoute>
-                    <MainLayout>
-                      <UserProfilePage />
-                    </MainLayout>
-                  </PrivateRoute>
-                }
-              >
-                <Route
-                  path="write"
-                  element={
-                    <PrivateRoute>
-                      <EditorPage />
-                    </PrivateRoute>
-                  }
-                />
-              </Route> */}
             </Routes>
           </EditorProvider>
         }
       />
 
-      {/* Public Routes without EditorProvider */}
       <Route
         path="/"
         element={

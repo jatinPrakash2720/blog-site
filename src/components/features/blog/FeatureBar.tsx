@@ -3,7 +3,10 @@
 // import type React from "react";
 import React from "react";
 import { cn } from "@/lib/utils";
-import { LayoutToggle, type LayoutType } from "../../common/subComps/layout-toggle";
+import {
+  LayoutToggle,
+  type LayoutType,
+} from "../../common/subComps/layout-toggle";
 
 interface MenuBarItem {
   slug: string;
@@ -30,14 +33,12 @@ const FeatureBar: React.FC<FeatureBarProps> = ({
   sortBy = "Newest",
   onSortChange,
 }) => {
-  
-  
   const sortOptions = ["Newest", "Popular", "Trending"];
 
   return (
     <>
-      {/* Desktop FeatureBar */}
-      <div className="hidden pt-4 md:flex items-center justify-between w-full">
+      {/* Desktop FeatureBar - Hidden on mobile/tablet, only show on desktop */}
+      <div className="hidden pt-4 lg:flex items-center justify-between w-full">
         {/* Filter buttons */}
         <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
           {items.map((item) => {
@@ -47,10 +48,10 @@ const FeatureBar: React.FC<FeatureBarProps> = ({
                 key={item.slug}
                 onClick={() => setActiveFilter(item.slug)}
                 className={cn(
-                  "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap",
+                  "flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap",
                   activeFilter === item.slug
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+                    ? "bg-black hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-200 text-white dark:text-black shadow-sm"
+                    : "bg-transparent text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white border border-black/20 dark:border-white/20 hover:border-black/40 dark:hover:border-white/40"
                 )}
               >
                 <Icon className="w-4 h-4" />
@@ -92,30 +93,32 @@ const FeatureBar: React.FC<FeatureBarProps> = ({
             </div>
           )}
 
-          {/* Layout toggle */}
+          {/* Layout toggle - hidden on mobile/tablet */}
           {onLayoutChange && (
-            <LayoutToggle
-              layout={layout}
-              onLayoutChange={onLayoutChange}
-              className="flex-shrink-0"
-            />
+            <div className="hidden lg:block">
+              <LayoutToggle
+                layout={layout}
+                onLayoutChange={onLayoutChange}
+                className="shrink-0"
+              />
+            </div>
           )}
         </div>
       </div>
 
-      {/* Mobile Menubar */}
-      <div className="md:hidden w-full">
-        <div className="bg-background/80 backdrop-blur-md border rounded-lg shadow-lg px-4 py-1 flex items-center gap-1">
+      {/* Mobile Menubar - Hidden, replaced by MobileNavBar */}
+      <div className="md:hidden w-full hidden">
+        <div className="bg-background/80 backdrop-blur-md border border-black/10 dark:border-white/10 rounded-lg shadow-lg px-4 py-1 flex items-center gap-1">
           {items.map((item) => {
             return (
               <button
                 key={item.slug}
                 onClick={() => setActiveFilter(item.slug)}
                 className={cn(
-                  "text-xs font-medium px-2 py-2 rounded-md transition-all duration-200 flex-1 min-w-0 truncate",
+                  "text-xs font-medium px-3 py-2 rounded-full transition-all duration-200 flex-1 min-w-0 truncate",
                   activeFilter === item.slug
-                    ? "bg-foreground text-background shadow-sm"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    ? "bg-black hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-200 text-white dark:text-black shadow-sm"
+                    : "bg-transparent text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white border border-black/20 dark:border-white/20"
                 )}
                 title={item.label}
               >

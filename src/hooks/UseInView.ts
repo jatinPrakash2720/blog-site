@@ -1,24 +1,42 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 
 export const useInView = (options?: IntersectionObserverInit) => {
   const ref = useRef<HTMLDivElement>(null);
   const [isInView, setIsInView] = useState(false);
+  const observerRef = useRef<IntersectionObserver | null>(null);
 
   useEffect(() => {
-    const observer = new IntersectionObserver(([entry]) => {
-      setIsInView(entry.isIntersecting);
-    }, options);
+    // Use requestAnimationFrame to batch state updates
+    const handleIntersection = (entries: IntersectionObserverEntry[]) => {
+      const [entry] = entries;
+      requestAnimationFrame(() => {
+        setIsInView(entry.isIntersecting);
+      });
+    };
 
-    if (ref.current) {
-      observer.observe(ref.current);
+    // Create observer with optimized options
+    const observerOptions: IntersectionObserverInit = {
+      threshold: options?.threshold ?? 0.1,
+      rootMargin: options?.rootMargin ?? "0px",
+      root: options?.root ?? null,
+    };
+
+    observerRef.current = new IntersectionObserver(
+      handleIntersection,
+      observerOptions
+    );
+
+    const currentRef = ref.current;
+    if (currentRef) {
+      observerRef.current.observe(currentRef);
     }
 
     return () => {
-      if (ref.current) {
-        observer.unobserve(ref.current);
+      if (observerRef.current && currentRef) {
+        observerRef.current.unobserve(currentRef);
       }
     };
-  }, [options]);
+  }, [options?.threshold, options?.rootMargin, options?.root]);
 
   return [ref, isInView] as const;
 };

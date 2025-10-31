@@ -57,3 +57,12 @@ export interface UpdateBlogDetailsData {
     status: String;
     updatedAt: string;
   }
+
+  export interface CreateBlogData {
+    title: string;
+    content: string;
+  }
+
+  export interface CreateBlogResponse {
+    blog:Blog;
+  }

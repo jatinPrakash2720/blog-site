@@ -44,7 +44,7 @@ const TrendingBlog: React.FC<TrendingBlogProps> = ({ blogs, isLoading }) => {
 
   if (isLoading) {
     return (
-      <div className="relative flex items-center justify-center w-full h-[96vh] rounded-2xl overflow-hidden bg-muted">
+      <div className="relative flex items-center justify-center w-full h-[50vh] lg:h-[96vh] rounded-2xl overflow-hidden bg-muted">
         <div aria-label="Loading..." role="status">
           <svg
             className="h-12 w-12 animate-spin text-primary"
@@ -75,7 +75,7 @@ const TrendingBlog: React.FC<TrendingBlogProps> = ({ blogs, isLoading }) => {
   }
   const currentBlog = blogs[currentIndex];
   return (
-    <div className="relative w-full h-[96vh] rounded-2xl overflow-hidden group">
+    <div className="relative w-full h-[60vh] rounded-2xl overflow-hidden group">
       <AnimatePresence initial={false} mode="wait">
         <motion.div
           key={currentIndex}
@@ -130,7 +130,7 @@ const TrendingBlog: React.FC<TrendingBlogProps> = ({ blogs, isLoading }) => {
       </Button>
 
       <Link
-        to={`/blog/${currentBlog._id}`}
+        to={`/preview/${currentBlog._id}`}
         className="absolute bottom-0 left-0 right-0 p-8 text-white z-10"
       >
         <div className="inline-block mb-4">

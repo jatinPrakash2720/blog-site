@@ -230,3 +230,12 @@
   background-size: 400% 400%;
   animation: gradient-shift 12s ease infinite;
 }
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}

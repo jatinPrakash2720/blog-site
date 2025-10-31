@@ -141,6 +141,8 @@ const EditorPage: React.FC<EditorPageProps> = () => {
         onBackToEditor={handleBackToEditor}
         isHeaderVisible={isHeaderVisible}
         onToggleHeader={() => setIsHeaderVisible(!isHeaderVisible)}
+        showNotesButton={view !== "preview-fullscreen"}
+        showAISearchButton={view !== "preview-fullscreen"}
       />
     </>
   );

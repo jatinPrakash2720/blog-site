@@ -39,9 +39,10 @@ export interface IAuthContext {
   viewedProfile: UserPageProfile | null;
   login: (credentials: LoginData) => Promise<{
     status: number;
+    statusCode?: number;
     success: boolean;
     message?: string;
-    data?: { user: User; accessToken: string };
+    data?: { user: User; accessToken: string; provider?: "google" | "github" };
   }>;
   // register: (userData: RegisterData) => Promise<void>;
   signUp: (
@@ -102,7 +103,14 @@ export interface IBlogContext {
   feedBlogs: Blog[];
   feedPagination: PaginatedBlogResponse | null;
   fetchAllBlogs: (params?: GetBlogsParams) => Promise<void>;
-  fetchSingleBlog: (blogId: string) => Promise<void>;
+  fetchSearchBlog: (
+    blogId: string
+  ) => Promise<{
+    success: boolean;
+    status: number;
+    message: string;
+    data?: Blog;
+  }>;
   fetchBlogsByCategory: (
     categoryId: string,
     params?: GetBlogsParams

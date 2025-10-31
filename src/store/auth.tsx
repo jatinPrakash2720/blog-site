@@ -217,6 +217,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // For OAuth, we need to redirect to the backend server, not through nginx proxy
     const backendUrl =
       import.meta.env.VITE_BACKEND_URL || "http://localhost:8080";
+    // const backendUrl = import.meta.env.VITE_LOCAL_BACKEND_URL;
     console.log("Final backend URL:", backendUrl);
     console.log("Redirecting to:", `${backendUrl}/api/v1/users/google`);
     window.location.href = `${backendUrl}/api/v1/users/google`;
@@ -350,20 +351,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             LocalStorage.set("token", "");
             LocalStorage.set("user", "");
           }
+          console.log("response onSuccess :", response);
           navigate("/home");
-          return {
-            status: response.statusCode,
-            success: true,
-            message: response.message,
-            data: { user, accessToken },
-          };
+          return response;
         },
         (response) => {
-          return {
-            status: response.statusCode,
-            success: response.success || false,
-            message: response.message,
-          };
+          console.log("response onError :", response);
+          return response;
         }
       );
     },

@@ -53,9 +53,21 @@ export const SignInPage = () => {
     setIsSubmitting(true);
     try {
       const response = await login(data);
-      if (!response?.success && response?.message) {
-        toast.error(response.message);
+      console.log("response :", response);
+      console.log("response status :", response?.statusCode);
+      
+      if(response?.statusCode===409){
+        toast.success(response?.message);
+        continueWithGoogle();
       }
+      if(response?.statusCode===408){
+        toast.success(response?.message);
+        continueWithGithub();
+      }
+      if(response?.statusCode!==409 && response?.statusCode!==408){
+        toast.error(response?.message);
+      }
+      toast.success(response?.message);
       // Success handling is done in auth store (navigation)
     } catch {
       toast.error("Error while Login");

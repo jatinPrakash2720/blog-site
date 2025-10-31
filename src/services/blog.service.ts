@@ -1,27 +1,36 @@
 import { apiClient } from "../lib/apiConfig.ts";
 import type * as apiInterfaces from "../types/apisInterfaces/api.ts";
 import type { ApiResponse } from "../types/apiResponse.ts";
+import type { Blog } from "@/types/modalsInterfaces/Blog.ts";
+import type {
+  CreateBlogData,
+  GetBlogsParams,
+  PaginatedBlogResponse,
+  UpdateBlogDetailsData,
+} from "@/types/apisInterfaces/blog.api.ts";
 
-export const getBlogs = (params: apiInterfaces.GetBlogsParams = {}) => {
-  return apiClient.get<ApiResponse<apiInterfaces.PaginatedBlogResponse>>(
-    "/blogs",
-    { params }
-  );
+export const getBlogs = (params: GetBlogsParams) => {
+  return apiClient.get<ApiResponse<PaginatedBlogResponse>>("/blogs", {
+    params,
+  });
+};
+export const getSearchedBlog = (blogId: string) => {
+  return apiClient.get<ApiResponse<Blog>>(`/blogs/${blogId}`);
 };
 
-export const getBlog = (blogId: string) => {
-  return apiClient.get<ApiResponse<apiInterfaces.Blog>>(`/blogs/${blogId}`);
+export const getBlogByOwner = (blogId: string) => {
+  return apiClient.get<ApiResponse<Blog>>(`/blogs/own/${blogId}`);
 };
 
-export const createBlog = (data: { title: string; content: string }) => {
-  return apiClient.post<ApiResponse<apiInterfaces.Blog>>("/blogs", data);
+export const createBlog = (data: CreateBlogData) => {
+  return apiClient.post<ApiResponse<Blog>>("/blogs", data);
 };
 
 export const updateBlogDetails = ({
   blogId,
   status,
   thumbnail,
-}: apiInterfaces.UpdateBlogDetailsPayload) => {
+}: UpdateBlogDetailsData) => {
   const formData = new FormData();
   formData.append("status", status);
   if (thumbnail) {

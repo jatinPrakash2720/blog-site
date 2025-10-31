@@ -1,10 +1,12 @@
 import type React from "react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, memo } from "react";
 import { Link } from "react-router-dom";
+import { useThrottledCallback } from "@/hooks/use-throttled-callback";
 import { Card, CardContent } from "@/components/common/wrappers/Card";
 import Avatar from "@/components/common/wrappers/Avatar";
 import Badge from "@/components/common/wrappers/Badge";
 import AspectRatio from "@/components/common/wrappers/AspectRatio";
+import { ImageWithSkeleton } from "@/components/common/ImageWithSkeleton";
 import {
   ThumbsUp,
   MessageCircle,
@@ -21,12 +23,12 @@ interface AnimatedTitleProps {
 const AnimatedTitle = ({ title, baseClassName }: AnimatedTitleProps) => {
   const titleRef = useRef<HTMLHeadingElement>(null);
 
-  useEffect(() => {
-    const titleElement = titleRef.current;
-    if (!titleElement) return;
+  // Throttle resize handler to improve performance
+  const checkAndApplyAnimation = useThrottledCallback(
+    () => {
+      const titleElement = titleRef.current;
+      if (!titleElement) return;
 
-    // This function checks if the text is overflowing and applies the necessary class and CSS variable.
-    const checkAndApplyAnimation = () => {
       const isOverflowing = titleElement.scrollWidth > titleElement.clientWidth;
 
       if (isOverflowing) {
@@ -42,15 +44,21 @@ const AnimatedTitle = ({ title, baseClassName }: AnimatedTitleProps) => {
       } else {
         titleElement.classList.remove("is-truncated");
       }
-    };
+    },
+    150,
+    [title]
+  );
 
+  useEffect(() => {
     // Run the check initially and whenever the window is resized
     checkAndApplyAnimation();
-    window.addEventListener("resize", checkAndApplyAnimation);
+    window.addEventListener("resize", checkAndApplyAnimation, {
+      passive: true,
+    });
 
     // Cleanup the event listener when the component unmounts
     return () => window.removeEventListener("resize", checkAndApplyAnimation);
-  }, [title]); // Rerun this effect if the title prop changes
+  }, [title, checkAndApplyAnimation]); // Rerun this effect if the title prop changes
 
   return (
     <div className="animated-title-wrapper">
@@ -71,7 +79,10 @@ interface BlogCardProps {
   layout?: "square" | "landscape";
 }
 
-const BlogCard: React.FC<BlogCardProps> = ({ blog, layout = "square" }) => {
+const BlogCardComponent: React.FC<BlogCardProps> = ({
+  blog,
+  layout = "square",
+}) => {
   if (layout === "landscape") {
     return (
       <Card className="hover:shadow-3xl bg-white/50 dark:bg-neutral-900/50 backdrop-blur-xl border dark:border-neutral-800 border-black/10 rounded-[32px] shadow-2xl transform transition-all duration-300 hover:shadow-3xl">
@@ -109,7 +120,7 @@ const BlogCard: React.FC<BlogCardProps> = ({ blog, layout = "square" }) => {
             </div>
 
             {/* Title section */}
-            <Link to={`/blog/${blog._id}`} className="block mb-3">
+            <Link to={`/preview/${blog._id}`} className="block mb-3">
               <h3 className="font-bold text-lg leading-tight text-gray-900/90 dark:text-white/90 line-clamp-2 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200">
                 {blog.title}
               </h3>
@@ -146,15 +157,14 @@ const BlogCard: React.FC<BlogCardProps> = ({ blog, layout = "square" }) => {
           </div>
 
           {/* Right side image */}
-          <div className="w-92 flex-shrink-0">
-            <Link to={`/blog/${blog._id}`} className="block">
+          <div className="w-92 shrink-0">
+            <Link to={`/preview/${blog._id}`} className="block">
               <AspectRatio ratio={16 / 9}>
-                <img
-                  //  src={blog.thumbnail}
-                  src={blog.thumbnail || "/placeholder.svg"}
+                <ImageWithSkeleton
+                  src={blog.thumbnail}
                   alt={blog.title}
-                  // alt={blog.title}
                   className="w-full h-full object-cover rounded-xl opacity-90 hover:opacity-100 transition-opacity duration-300"
+                  skeletonClassName="rounded-xl"
                 />
               </AspectRatio>
             </Link>
@@ -166,20 +176,21 @@ const BlogCard: React.FC<BlogCardProps> = ({ blog, layout = "square" }) => {
 
   return (
     <Card className="hover:shadow-3xl bg-white/50 dark:bg-neutral-900/50 backdrop-blur-xl border dark:border-neutral-800 border-black/10 rounded-[32px] shadow-2xl transform transition-all duration-300 hover:shadow-3xl">
-      <Link to={`/blog/${blog._id}`} className="block relative z-10">
+      <Link to={`/preview/${blog._id}`} className="block relative z-10">
         <AspectRatio ratio={16 / 9}>
-          <img
-            src={blog.thumbnail || "/placeholder.svg"}
+          <ImageWithSkeleton
+            src={blog.thumbnail}
             alt={blog.title}
             className="w-[90%] h-full mx-auto object-cover rounded-xl opacity-90 hover:opacity-100 transition-opacity duration-300"
+            skeletonClassName="rounded-xl"
           />
         </AspectRatio>
       </Link>
 
-      <CardContent className="p-4 flex flex-col flex-grow justify-between relative z-10">
+      <CardContent className="p-4 flex flex-col grow justify-between relative z-10">
         {/* Top section for title and excerpt */}
         <div>
-          <Link to={`/blog/${blog._id}`} className="block mb-3 group">
+          <Link to={`/preview/${blog._id}`} className="block mb-3 group">
             <AnimatedTitle
               title={blog.title}
               baseClassName="font-bold text-lg leading-tight text-gray-900/90 dark:text-white/90 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200"
@@ -238,5 +249,15 @@ const BlogCard: React.FC<BlogCardProps> = ({ blog, layout = "square" }) => {
     </Card>
   );
 };
+
+// Memoize BlogCard to prevent unnecessary re-renders during scroll
+const BlogCard = memo(BlogCardComponent, (prevProps, nextProps) => {
+  return (
+    prevProps.blog._id === nextProps.blog._id &&
+    prevProps.layout === nextProps.layout
+  );
+});
+
+BlogCard.displayName = "BlogCard";
 
 export default BlogCard;

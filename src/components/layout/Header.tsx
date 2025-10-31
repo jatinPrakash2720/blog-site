@@ -1,7 +1,8 @@
-"use client"
+"use client";
 
-import { useState, useEffect, useRef } from "react"
-import { Link, useNavigate, useLocation } from "react-router-dom"
+import { useState, useEffect, useRef } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useThrottledCallback } from "@/hooks/use-throttled-callback";
 import {
   Menu,
   X,
@@ -15,11 +16,11 @@ import {
   Edit,
   Undo,
   Redo,
-} from "lucide-react"
-import { useAuth } from "@/store/auth"
-import ThemeToggle from "@/components/common/wrappers/ThemeToggle"
-import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+} from "lucide-react";
+import { useAuth } from "@/store/auth";
+import ThemeToggle from "@/components/common/wrappers/ThemeToggle";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,25 +28,25 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/common/wrappers/DropdownMenu"
-import { cn } from "@/lib/utils"
-import { useEditorContextSafe } from "@/store/editor"
+} from "@/components/common/wrappers/DropdownMenu";
+import { cn } from "@/lib/utils";
+import { useEditorContextSafe } from "@/store/editor";
 
 const menuItems = [
   { name: "Home", href: "/" },
   { name: "Blogs", href: "/blogs" },
   { name: "About", href: "/about" },
-]
+];
 
 interface HeaderProps {
-  onHeightChange?: (height: number) => void
-  disableScrollEffect?: boolean
-  isEditorMode?: boolean
-  isPreviewMode?: boolean
-  onSave?: () => void
-  onPreview?: () => void
-  onBackToEditor?: () => void
-  isVisible?: boolean
+  onHeightChange?: (height: number) => void;
+  disableScrollEffect?: boolean;
+  isEditorMode?: boolean;
+  isPreviewMode?: boolean;
+  onSave?: () => void;
+  onPreview?: () => void;
+  onBackToEditor?: () => void;
+  isVisible?: boolean;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -58,81 +59,91 @@ const Header: React.FC<HeaderProps> = ({
   onBackToEditor,
   isVisible = true,
 }) => {
-  const [isScrolled, setIsScrolled] = useState(false)
-  const [menuState, setMenuState] = useState(false)
-  const headerRef = useRef<HTMLDivElement>(null)
-  const navigate = useNavigate()
-  const location = useLocation()
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [menuState, setMenuState] = useState(false);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const { isAuthenticated, currentUser, logout } = useAuth()
-  const { wordCount, editor } = useEditorContextSafe()
+  const { isAuthenticated, currentUser, logout } = useAuth();
+  const { wordCount, editor } = useEditorContextSafe();
 
   // Undo/Redo handlers
   const handleUndo = () => {
     if (editor) {
-      editor.chain().focus().undo().run()
+      editor.chain().focus().undo().run();
     }
-  }
+  };
 
   const handleRedo = () => {
     if (editor) {
-      editor.chain().focus().redo().run()
+      editor.chain().focus().redo().run();
     }
-  }
+  };
 
-  const showWriteButton = location.pathname === "/home" && !isEditorMode
-  const writeUrl = "/editor" // Direct to fullscreen editor
+  const showWriteButton = location.pathname === "/home" && !isEditorMode;
+  const writeUrl = "/editor"; // Direct to fullscreen editor
 
   // Debug handlers with visual feedback
   const handleSaveClick = () => {
-    console.log("Header Save button clicked")
-    onSave?.()
-  }
+    console.log("Header Save button clicked");
+    onSave?.();
+  };
 
   const handlePreviewClick = () => {
-    console.log("Header Preview button clicked, isPreviewMode:", isPreviewMode)
-    onPreview?.()
-  }
+    console.log("Header Preview button clicked, isPreviewMode:", isPreviewMode);
+    onPreview?.();
+  };
 
   const handleBackToEditorClick = () => {
-    console.log("Header Back to Editor button clicked")
-    onBackToEditor?.()
-  }
+    console.log("Header Back to Editor button clicked");
+    onBackToEditor?.();
+  };
+
+  // Throttle header height recalculation to prevent layout shifts during scroll
+  const updateHeight = useThrottledCallback(
+    () => {
+      if (headerRef.current && onHeightChange) {
+        onHeightChange(headerRef.current.offsetHeight);
+      }
+    },
+    100,
+    [isScrolled, menuState, onHeightChange],
+    { leading: true, trailing: true }
+  );
 
   useEffect(() => {
-    if (headerRef.current && onHeightChange) {
-      onHeightChange(headerRef.current.offsetHeight)
-    }
-  }, [isScrolled, onHeightChange, menuState])
+    updateHeight();
+  }, [updateHeight]);
 
   useEffect(() => {
     if (disableScrollEffect || isEditorMode) {
-      setIsScrolled(true)
-      return
+      setIsScrolled(true);
+      return;
     }
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50)
-    }
-    window.addEventListener("scroll", handleScroll, { passive: true })
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [disableScrollEffect, isEditorMode])
+      setIsScrolled(window.scrollY > 50);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [disableScrollEffect, isEditorMode]);
 
   const handleLogout = async () => {
-    await logout()
-    navigate("/auth/login")
-  }
+    await logout();
+    navigate("/auth/login");
+  };
 
   const getInitials = (name: string) => {
-    if (!name) return ""
+    if (!name) return "";
     return name
       .split(" ")
       .map((n) => n[0])
       .join("")
-      .toUpperCase()
-  }
+      .toUpperCase();
+  };
 
   // Debug header visibility
-  console.log("Header isVisible:", isVisible, "isEditorMode:", isEditorMode)
+  console.log("Header isVisible:", isVisible, "isEditorMode:", isEditorMode);
 
   return (
     <header ref={headerRef}>
@@ -500,8 +511,8 @@ const Header: React.FC<HeaderProps> = ({
         </div>
       </nav>
     </header>
-  )
-}
+  );
+};
 
 // Logo component from the prompt
 const Logo = ({ className }: { className?: string }) => {
@@ -512,7 +523,7 @@ const Logo = ({ className }: { className?: string }) => {
       </div>
       <span className="font-semibold text-lg hidden sm:inline">BlogLikho</span>
     </div>
-  )
-}
+  );
+};
 
-export default Header
+export default Header;

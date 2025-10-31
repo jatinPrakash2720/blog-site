@@ -6,7 +6,7 @@ import { getBlogsInCollection } from "@/services/save.service";
 import { useBlogs } from "@/store/blog";
 import { useCategories } from "@/store/category";
 import type { Blog } from "@/types/apisInterfaces/api";
-import Header from "@/components/layout/Header";
+import Header1 from "@/components/layout/Header1";
 import Loader from "@/components/ui/Loader";
 import FeatureBar from "@/components/features/blog/FeatureBar";
 import TrendingBlog from "@/components/features/blog/TrendingBlog";
@@ -672,7 +672,7 @@ const UserProfilePage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-transparent">
-      <Header isEditorMode={true} />
+      <Header1 isEditorMode={true} />
 
       <div className="flex relative">
         {/* Mobile Overlay */}

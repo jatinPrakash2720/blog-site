@@ -65,31 +65,70 @@ export const BlogProvider: React.FC<contextInterfaces.BlogProviderProps> = ({
 
   const fetchAllBlogs = useCallback(
     async (params: apiInterfaces.GetBlogsParams = {}) => {
-      console.log("hi");
-      await requestHandler(
+      return await requestHandler(
         () => blogService.getBlogs(params),
         setLoading,
         (response) => {
-          const { blogs } = response.data;
-          // if (data && data.blogs) {
-          setAllBlogs(blogs);
-          setTrendingBlogs(blogs.slice(0, 5));
+          if (!response.data) {
+            return { success: false, message: "No blog found" };
+          }
+          const { blogs } = response?.data;
+          // Append blogs if loading next page, otherwise replace
+          if (params.page && params.page > 1) {
+            setAllBlogs((prev) => [...prev, ...blogs]);
+          } else {
+            setAllBlogs(blogs);
+            setTrendingBlogs(blogs.slice(0, 5));
+          }
           updatePaginationState(response.data, setPagination);
-          // } else {
-          //   console.error("No blogs found in response:", data);
-          // }
         },
-        setError
+        (response) => {
+          return response;
+        }
       );
     },
     [updatePaginationState]
   );
 
+  const fetchSearchBlog = useCallback(async (blogId: string) => {
+    if (currentBlog && blogId === currentBlog._id) {
+      return {
+        status: 201,
+        success: true,
+        currentBlog,
+        message: "Fetched from Blog Context",
+      };
+    }
+    return await requestHandler(
+      () => blogService.getSearchedBlog(blogId),
+      setLoadingSingleBlog,
+      (response) => {
+        if (!response.data)
+          return {
+            status: 301,
+            success: false,
+            data: {},
+            message: "Response not recieved",
+          };
+        setCurrentBlog(response?.data);
+        return response;
+      },
+      (response) => {
+        return response;
+      }
+    );
+  }, []);
   const fetchSingleBlog = useCallback(async (blogId: string) => {
+    if (blogId === currentBlog?._id) {
+      return {};
+    }
     await requestHandler(
       () => blogService.getBlog(blogId),
       setLoadingSingleBlog,
       (response) => {
+        if (!response) {
+          return {};
+        }
         // console.log(response);
         // console.log(response.data);
         setCurrentBlog(response.data);
@@ -338,7 +377,12 @@ export const BlogProvider: React.FC<contextInterfaces.BlogProviderProps> = ({
         setLoading,
         (response) => {
           const { data } = response;
-          setFeedBlogs(data.blogs);
+          // Append blogs if loading next page, otherwise replace
+          if (params.page && params.page > 1) {
+            setFeedBlogs((prev) => [...prev, ...data.blogs]);
+          } else {
+            setFeedBlogs(data.blogs);
+          }
           updatePaginationState(data, setFeedPagination);
         },
         setError
@@ -380,7 +424,7 @@ export const BlogProvider: React.FC<contextInterfaces.BlogProviderProps> = ({
     feedBlogs,
     feedPagination,
     fetchAllBlogs,
-    fetchSingleBlog,
+    fetchSearchBlog,
     initiateBlogCreation,
     updateBlogDetailsAction,
     updateBlogTitleAction,

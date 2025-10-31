@@ -1,47 +1,46 @@
 import FeatureBar from "@/components/features/blog/FeatureBar";
 import TrendingBlog from "@/components/features/blog/TrendingBlog";
-import Header from "@/components/layout/Header";
+import Header1 from "@/components/layout/Header1";
+import MobileNavBar from "@/components/layout/MobileNavBar";
 import { useInView } from "@/hooks/UseInView";
 import { useBlogs } from "@/store/blog";
 import { useCategories } from "@/store/category";
 import { Compass, Home, Tag } from "lucide-react";
 import type React from "react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { type LayoutType } from "@/components/common/subComps/layout-toggle";
 import BlogList from "@/components/features/blog/BlogList";
 import Sidebar from "@/components/layout/Sidebar";
-import { AnimatePresence, motion } from "framer-motion";
-import { MenuBar } from "@/components/common/subComps/MenuBar";
+import Dock from "@/components/common/subComps/Dock";
 
 const HomePage: React.FC = () => {
+  const location = useLocation();
   const [activeFilter, setActiveFilter] = useState<string>("for-you");
   const [layout, setLayout] = useState<LayoutType>("square");
-  const [headerHeight, setHeaderHeight] = useState(0);
   const [menuItems, setMenuItems] = useState([
     { slug: "for-you", label: "For You", icon: Home },
     { slug: "explore", label: "Explore", icon: Compass },
   ]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const blogListRef = useRef<HTMLDivElement>(null);
 
-  const {
-    trendingBlogs,
-    loading,
-    pagination,
-    feedPagination,
-    fetchAllBlogs,
-    fetchFollowingFeed,
-    fetchBlogsByCategory,
-  } = useBlogs();
+  // Handle filter from navigation state
+  useEffect(() => {
+    const filter = (location.state as { filter?: string })?.filter;
+    if (filter === "explore") {
+      setActiveFilter("explore");
+    }
+  }, [location.state]);
+
+  const { trendingBlogs, loading, fetchAllBlogs, fetchFollowingFeed } =
+    useBlogs();
   const { filterableSubCategories, fetchFilterableSubCategories } =
     useCategories();
 
-  const [trendingBlogRef, isTrendingBlogVisible] = useInView( { threshold: 0.1 } );
+  const [trendingBlogRef, isTrendingBlogVisible] = useInView({
+    threshold: 0.1,
+  });
   const [featureBarRef, isFeatureBarVisible] = useInView({ threshold: 0.5 });
   const showFloatingMenuBar = !isTrendingBlogVisible && !isFeatureBarVisible;
-  
-  const isFeed = activeFilter === "for-you";
-  const currentPagination = isFeed ? feedPagination : pagination;
 
   useEffect(() => {
     Promise.all([
@@ -50,19 +49,6 @@ const HomePage: React.FC = () => {
       fetchFollowingFeed({ page: 1, limit: 10 }),
     ]);
   }, [fetchFilterableSubCategories, fetchAllBlogs, fetchFollowingFeed]);
-
-  useEffect(() => {
-    if (currentPage > 1 || (activeFilter !== "for-you" && activeFilter !== "explore")) {
-      const params = { page: currentPage, limit: 10 };
-      if (activeFilter === "for-you") {
-        fetchFollowingFeed(params);
-      } else if (activeFilter === "explore") {
-        fetchAllBlogs(params);
-      } else {
-        fetchBlogsByCategory(activeFilter, params);
-      }
-    }
-  }, [activeFilter, currentPage]);
 
   useEffect(() => {
     if (filterableSubCategories.length > 0) {
@@ -79,23 +65,14 @@ const HomePage: React.FC = () => {
     }
   }, [filterableSubCategories]);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [activeFilter]);
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    blogListRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-  
   return (
     <div className="min-h-screen flex flex-col">
-      <Header onHeightChange={setHeaderHeight} />
-      <div
-        className="relative flex-grow w-full"
-        style={{ paddingTop: `${headerHeight+14}px` }}
-      >
-        <main className="container max-w-full mx-auto px-4">
+      <Header1 />
+      <div className="relative grow w-full pt-20 pb-20 lg:pb-0">
+        <main
+          className="container max-w-full mx-auto px-4"
+          style={{ contentVisibility: "auto" }}
+        >
           <section ref={trendingBlogRef} className="">
             <TrendingBlog
               blogs={trendingBlogs}
@@ -126,40 +103,31 @@ const HomePage: React.FC = () => {
           </section>
         </main>
       </div>
-      <AnimatePresence>
-        {showFloatingMenuBar && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 p-1 bg-white/50 dark:bg-neutral-900/70 backdrop-blur-lg rounded-full shadow-lg border border-white/20 dark:border-neutral-800/80"
-              style={{
-                maskImage:
-                  "linear-gradient(to top, black 50%, transparent 100%)",
-              }}
-            ></motion.div>
-            <motion.div
-              initial={{ y: 100 }}
-              animate={{ y: 0 }}
-              exit={{ y: 100 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50"
-            >
-              <MenuBar
-                items={menuItems}
-                activeFilter={activeFilter}
-                setActiveFilter={setActiveFilter}
-                layout={layout}
-                onLayoutChange={setLayout}
-                paginationData={currentPagination}
-                onPageChange={handlePageChange}
-              />
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+      {/* Dock - Desktop only, replaced MenuBar */}
+      {showFloatingMenuBar && (
+        <div className="hidden lg:block fixed bottom-0 left-0 right-0 z-50">
+          <div className="pointer-events-none">
+            <Dock
+              items={menuItems.map((item) => {
+                const Icon = item.icon;
+                return {
+                  icon: <Icon className="w-5 h-5" />,
+                  label: item.label,
+                  onClick: () => setActiveFilter(item.slug),
+                  className:
+                    activeFilter === item.slug ? "ring-2 ring-primary" : "",
+                };
+              })}
+              panelHeight={68}
+              baseItemSize={50}
+              magnification={70}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Navigation Bar */}
+      <MobileNavBar />
     </div>
   );
 };
