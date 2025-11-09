@@ -1,5 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 import mongooseDelete from "mongoose-delete";
+import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
 
 const commentSchema = new Schema(
   {
@@ -25,5 +26,7 @@ commentSchema.plugin(mongooseDelete, {
   overrideMethods: "all",
   deleteAt: true,
 });
+
+commentSchema.plugin(mongooseAggregatePaginate);
 
 export const Comment = mongoose.model("Comment", commentSchema);

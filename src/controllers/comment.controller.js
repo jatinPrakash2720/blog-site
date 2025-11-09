@@ -18,7 +18,7 @@ const getBlogComments = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Blog not found.");
   }
 
-  const commentsAggregate = await Comment.aggregate([
+  const pipeline = [
     {
       $match: {
         blog: new mongoose.Types.ObjectId(blogId),
@@ -45,6 +45,16 @@ const getBlogComments = asyncHandler(async (req, res) => {
       $unwind: "$ownerDetails",
     },
     {
+      $addFields: {
+        owner: {
+          _id: "$ownerDetails._id",
+          username: "$ownerDetails.username",
+          fullName: "$ownerDetails.fullName",
+          avatar: "$ownerDetails.avatar",
+        },
+      },
+    },
+    {
       $project: {
         ownerDetails: 0,
       },
@@ -54,12 +64,18 @@ const getBlogComments = asyncHandler(async (req, res) => {
         createdAt: -1,
       },
     },
-  ]);
+  ];
 
-  const comments = await Comment.aggregatePaginate(commentsAggregate, {
-    page: parseInt(page, 10),
-    limit: parseInt(limit, 10),
-  });
+  const comments = await Comment.aggregatePaginate(
+    Comment.aggregate(pipeline),
+    {
+      page: parseInt(page, 10),
+      limit: parseInt(limit, 10),
+      customLabels: {
+        docs: "comments",
+      },
+    }
+  );
 
   return res
     .status(200)
@@ -128,7 +144,7 @@ const deleteComment = asyncHandler(async (req, res) => {
     throw new ApiError(403, "You are not authorized to delete this comment.");
   }
   await Blog.findByIdAndUpdate(comment.blog, { $inc: { commentCount: -1 } });
-  
+
   await Comment.findByIdAndDelete(commentId);
 
   return res

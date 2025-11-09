@@ -71,7 +71,7 @@ const getUserFollowers = asyncHandler(async (req, res) => {
         as: "followerDetails",
         pipeline: [
           {
-            project: {
+            $project: {
               username: 1,
               fullName: 1,
               avatar: 1,
@@ -146,4 +146,43 @@ const getUserFollowing = asyncHandler(async (req, res) => {
     );
 });
 
-export { toggleFollow, getUserFollowers, getUserFollowing };
+const getSuggestedUsers = asyncHandler(async (req, res) => {
+  const currentUserId = req.user._id;
+
+  // Fetch any 5 users excluding the current user
+  const suggestedUsers = await User.aggregate([
+    {
+      $match: {
+        _id: { $ne: new mongoose.Types.ObjectId(currentUserId) },
+      },
+    },
+    {
+      $project: {
+        username: 1,
+        fullName: 1,
+        avatar: 1,
+        bio: 1,
+        _id: 1,
+      },
+    },
+    {
+      $sample: { size: 5 },
+    },
+  ]);
+
+  if (!suggestedUsers) {
+    throw new ApiError(404, "Could not fetch suggested users.");
+  }
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        suggestedUsers,
+        "Suggested users fetched successfully."
+      )
+    );
+});
+
+export { toggleFollow, getUserFollowers, getUserFollowing, getSuggestedUsers };
