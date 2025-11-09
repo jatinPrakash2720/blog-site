@@ -198,7 +198,8 @@ export interface CreateCommentPayload {
 }
 
 export interface PaginatedCommentResponse {
-  docs: Comment[];
+  comments?: Comment[]; // Backend uses customLabels: { docs: "comments" }
+  docs?: Comment[]; // Fallback for standard pagination
   totalDocs: number;
   limit: number;
   page: number;

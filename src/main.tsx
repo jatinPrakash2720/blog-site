@@ -9,7 +9,7 @@ import { AuthProvider } from "./store/auth.tsx";
 import { BlogProvider } from "./store/blog.tsx";
 import { CategoryProvider } from "./store/category.tsx";
 import { SocialProvider } from "./store/social.tsx";
-import { TooltipProvider } from "./components/common/wrappers/Tooltip.tsx";
+import { TooltipProvider } from "./components/ui/tooltip";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
     <BrowserRouter>

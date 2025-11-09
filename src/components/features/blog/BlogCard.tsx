@@ -1,11 +1,10 @@
 import type React from "react";
 import { useEffect, useRef, memo } from "react";
 import { Link } from "react-router-dom";
-import { useThrottledCallback } from "@/hooks/use-throttled-callback";
-import { Card, CardContent } from "@/components/common/wrappers/Card";
-import Avatar from "@/components/common/wrappers/Avatar";
-import Badge from "@/components/common/wrappers/Badge";
-import AspectRatio from "@/components/common/wrappers/AspectRatio";
+import { Card, CardContent } from "@/components/ui/card";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { ImageWithSkeleton } from "@/components/common/ImageWithSkeleton";
 import {
   ThumbsUp,
@@ -14,169 +13,97 @@ import {
   MoreHorizontal,
 } from "lucide-react";
 import type { Blog } from "@/types/apisInterfaces/api";
+import { gsap } from "gsap";
 
-interface AnimatedTitleProps {
-  title: string;
-  baseClassName: string;
+interface BlogCardProps {
+  blog: Blog;
+  layout?: "square";
 }
 
-const AnimatedTitle = ({ title, baseClassName }: AnimatedTitleProps) => {
-  const titleRef = useRef<HTMLHeadingElement>(null);
+// Shared action buttons component
+const ActionButtons = ({
+  likeCount,
+  commentCount,
+}: {
+  likeCount: number;
+  commentCount: number;
+}) => (
+  <div className="flex items-center gap-1.5">
+    <button className="flex items-center gap-1.5 hover:text-blue-500 dark:hover:text-blue-400 transition-colors duration-200 p-1 rounded-lg hover:bg-white/20 dark:hover:bg-white/10">
+      <ThumbsUp className="p-0" size={18} />
+      <span className="text-sm pr-2">{likeCount}</span>
+    </button>
+    <button className="flex items-center gap-1.5 hover:text-blue-500 dark:hover:text-blue-400 transition-colors duration-200 p-1 rounded-lg hover:bg-white/20 dark:hover:bg-white/10">
+      <MessageCircle size={18} />
+      <span className="text-sm">{commentCount}</span>
+    </button>
+  </div>
+);
 
-  // Throttle resize handler to improve performance
-  const checkAndApplyAnimation = useThrottledCallback(
-    () => {
-      const titleElement = titleRef.current;
-      if (!titleElement) return;
-
-      const isOverflowing = titleElement.scrollWidth > titleElement.clientWidth;
-
-      if (isOverflowing) {
-        titleElement.classList.add("is-truncated");
-        // Calculate the exact distance the text needs to scroll
-        const scrollAmount =
-          titleElement.scrollWidth - titleElement.clientWidth;
-        // Set the value for our CSS variable, adding 20px of padding for a better look
-        titleElement.style.setProperty(
-          "--scroll-amount",
-          `-${scrollAmount + 20}px`
-        );
-      } else {
-        titleElement.classList.remove("is-truncated");
-      }
-    },
-    150,
-    [title]
-  );
-
-  useEffect(() => {
-    // Run the check initially and whenever the window is resized
-    checkAndApplyAnimation();
-    window.addEventListener("resize", checkAndApplyAnimation, {
-      passive: true,
-    });
-
-    // Cleanup the event listener when the component unmounts
-    return () => window.removeEventListener("resize", checkAndApplyAnimation);
-  }, [title, checkAndApplyAnimation]); // Rerun this effect if the title prop changes
+// Shared author info component
+const AuthorInfo = ({
+  author,
+  size = "md",
+}: {
+  author: Blog["owner"];
+  size?: "sm" | "md";
+}) => {
+  const avatarSize = size === "sm" ? "w-10 h-10" : "w-12 h-12";
+  const textSize = size === "sm" ? "text-base" : "text-[18px]";
 
   return (
-    <div className="animated-title-wrapper">
-      <h3
-        ref={titleRef}
-        className={`${baseClassName} title-content`}
-        title={title}
+    <div className="flex items-center gap-2">
+      <Avatar
+        className={`${avatarSize} ring-2 ring-white/30 dark:ring-white/20 hover:ring-white/50 dark:hover:ring-white/30 transition-all duration-200`}
       >
-        {title}
-      </h3>
+        <AvatarImage src={author.avatar} alt={author.fullName} />
+        <AvatarFallback>{author.fullName[0]}</AvatarFallback>
+      </Avatar>
+      <span
+        className={`${textSize} font-semibold text-gray-900/90 dark:text-white/90`}
+      >
+        {author.fullName}
+      </span>
     </div>
   );
 };
-
-// Define the props for the BlogCard to make it reusable
-interface BlogCardProps {
-  blog: Blog;
-  layout?: "square" | "landscape";
-}
 
 const BlogCardComponent: React.FC<BlogCardProps> = ({
   blog,
   layout = "square",
 }) => {
-  if (layout === "landscape") {
-    return (
-      <Card className="hover:shadow-3xl bg-white/50 dark:bg-neutral-900/50 backdrop-blur-xl border dark:border-neutral-800 border-black/10 rounded-[32px] shadow-2xl transform transition-all duration-300 hover:shadow-3xl">
-        <CardContent className="p-4 flex gap-4 relative z-10">
-          {/* Left side content */}
-          <div className="flex-1 flex flex-col justify-between min-h-[200px]">
-            {/* Author info at top */}
-            <div className="flex items-center gap-2 mb-3">
-              <Avatar
-                src={blog.owner.avatar}
-                alt={blog.owner.fullName}
-                className="w-10 h-10 ring-2 ring-white/30 dark:ring-white/20 hover:ring-white/50 dark:hover:ring-white/30 transition-all duration-200"
-              />
-              <span className="text-base font-semibold text-gray-900/90 dark:text-white/90">
-                {blog.owner.fullName}
-              </span>
-            </div>
+  const cardRef = useRef<HTMLDivElement>(null);
 
-            {/* Tags */}
-            <div className="flex gap-2 mb-4">
-              <Badge
-                variant="secondary"
-                className="backdrop-blur-sm bg-green-500/80 text-white border-none hover:bg-green-600/80 transition-all duration-200 text-xs"
-              >
-                {blog.categories?.[0]?.name || "General"}
+  // Optimized animation - only animate if in viewport
+  useEffect(() => {
+    if (!cardRef.current) return;
 
-                {/* {blog.topTag} */}
-              </Badge>
-              <Badge
-                variant="secondary"
-                className="backdrop-blur-sm bg-green-600/60 text-white border-none hover:bg-green-700/60 transition-all duration-200 text-xs"
-              >
-                subcategorie tag
-              </Badge>
-            </div>
-
-            {/* Title section */}
-            <Link to={`/preview/${blog._id}`} className="block mb-3">
-              <h3 className="font-bold text-lg leading-tight text-gray-900/90 dark:text-white/90 line-clamp-2 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200">
-                {blog.title}
-              </h3>
-            </Link>
-
-            {/* Content section */}
-            <div className="mb-4 flex-1">
-              <p className="text-sm text-gray-700/80 dark:text-gray-300/80 line-clamp-3">
-                {blog.excerpt}
-              </p>
-            </div>
-
-            {/* Action Bar at bottom */}
-            <div className="flex items-center justify-between text-gray-600/80 dark:text-gray-400/80">
-              <div className="flex items-center">
-                <button className="flex items-center gap-1.5 hover:text-blue-500 dark:hover:text-blue-400 transition-colors duration-200 p-1 rounded-lg hover:bg-white/20 dark:hover:bg-white/10">
-                  <ThumbsUp className="p-0" size={18} />
-                  <span className="text-sm pr-2">{blog.likeCount}</span>
-                </button>
-                <button className="flex items-center gap-1.5 hover:text-blue-500 dark:hover:text-blue-400 transition-colors duration-200 p-1 rounded-lg hover:bg-white/20 dark:hover:bg-white/10">
-                  <MessageCircle size={18} />
-                  <span className="text-sm">{blog.commentCount}</span>
-                </button>
-              </div>
-              <div className="flex items-center gap-3">
-                <button className="hover:text-blue-500 dark:hover:text-blue-400 transition-colors duration-200 p-1 rounded-lg hover:bg-white/20 dark:hover:bg-white/10">
-                  <Bookmark size={18} />
-                </button>
-                <button className="hover:text-blue-500 dark:hover:text-blue-400 transition-colors duration-200 p-1 rounded-lg hover:bg-white/20 dark:hover:bg-white/10">
-                  <MoreHorizontal size={18} />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Right side image */}
-          <div className="w-92 shrink-0">
-            <Link to={`/preview/${blog._id}`} className="block">
-              <AspectRatio ratio={16 / 9}>
-                <ImageWithSkeleton
-                  src={blog.thumbnail}
-                  alt={blog.title}
-                  className="w-full h-full object-cover rounded-xl opacity-90 hover:opacity-100 transition-opacity duration-300"
-                  skeletonClassName="rounded-xl"
-                />
-              </AspectRatio>
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry.isIntersecting) {
+          gsap.fromTo(
+            cardRef.current,
+            { opacity: 0, y: 10 },
+            { opacity: 1, y: 0, duration: 0.3, ease: "power2.out" }
+          );
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
     );
-  }
+
+    observer.observe(cardRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  const cardClassName =
+    "hover:shadow-3xl bg-white/50 dark:bg-neutral-900/50 backdrop-blur-xl border dark:border-neutral-800 border-black/10 rounded-[32px] shadow-2xl transform transition-all duration-300";
+  const categoryName = blog.categories?.[0]?.name || "General";
 
   return (
-    <Card className="hover:shadow-3xl bg-white/50 dark:bg-neutral-900/50 backdrop-blur-xl border dark:border-neutral-800 border-black/10 rounded-[32px] shadow-2xl transform transition-all duration-300 hover:shadow-3xl">
-      <Link to={`/preview/${blog._id}`} className="block relative z-10">
+    <Card ref={cardRef} className={cardClassName}>
+      <Link to={`/read/${blog._id}`} className="block">
         <AspectRatio ratio={16 / 9}>
           <ImageWithSkeleton
             src={blog.thumbnail}
@@ -187,34 +114,22 @@ const BlogCardComponent: React.FC<BlogCardProps> = ({
         </AspectRatio>
       </Link>
 
-      <CardContent className="p-4 flex flex-col grow justify-between relative z-10">
-        {/* Top section for title and excerpt */}
+      <CardContent className="p-4 flex flex-col gap-4">
         <div>
-          <Link to={`/preview/${blog._id}`} className="block mb-3 group">
-            <AnimatedTitle
-              title={blog.title}
-              baseClassName="font-bold text-lg leading-tight text-gray-900/90 dark:text-white/90 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200"
-            />
+          <Link to={`/read/${blog._id}`} className="block mb-2">
+            <h3 className="font-bold text-lg leading-tight text-gray-900/90 dark:text-white/90 line-clamp-2 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200">
+              {blog.title}
+            </h3>
           </Link>
-          <p className="text-sm text-foreground mt-2 line-clamp-3">
-            {blog.excerpt}
-          </p>
+          <p className="text-sm text-foreground line-clamp-3">{blog.excerpt}</p>
         </div>
 
-        {/* Bottom section for actions and author info */}
-        <div>
-          {/* Action Bar */}
-          <div className="flex items-center justify-between text-foreground pt-2 pb-3">
-            <div className="flex items-center">
-              <button className="flex items-center gap-1.5 hover:text-blue-500 dark:hover:text-blue-400 transition-colors duration-200 p-1 rounded-lg hover:bg-white/20 dark:hover:bg-white/10">
-                <ThumbsUp className="p-0" size={18} />
-                <span className="text-sm pr-2">{blog.likeCount}</span>
-              </button>
-              <button className="flex items-center gap-1.5 hover:text-blue-500 dark:hover:text-blue-400 transition-colors duration-200 p-1 rounded-lg hover:bg-white/20 dark:hover:bg-white/10">
-                <MessageCircle size={18} />
-                <span className="text-sm">{blog.commentCount}</span>
-              </button>
-            </div>
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <ActionButtons
+              likeCount={blog.likeCount}
+              commentCount={blog.commentCount}
+            />
             <div className="flex items-center gap-3">
               <button className="hover:text-blue-500 dark:hover:text-blue-400 transition-colors duration-200 p-1 rounded-lg hover:bg-white/20 dark:hover:bg-white/10">
                 <Bookmark size={18} />
@@ -225,23 +140,13 @@ const BlogCardComponent: React.FC<BlogCardProps> = ({
             </div>
           </div>
 
-          {/* Author and Tag */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Avatar
-                src={blog.owner.avatar}
-                alt={blog.owner.fullName}
-                className="w-12 h-12 ring-2 ring-white/30 dark:ring-white/20 hover:ring-white/50 dark:hover:ring-white/30 transition-all duration-200"
-              />
-              <span className="text-[18px] font-semibold text-gray-900/90 dark:text-white/90">
-                {blog.owner.fullName}
-              </span>
-            </div>
+            <AuthorInfo author={blog.owner} />
             <Badge
               variant="secondary"
               className="backdrop-blur-sm bg-white/40 dark:bg-black/40 border-white/50 dark:border-white/20 text-gray-800 dark:text-gray-200 hover:bg-white/50 dark:hover:bg-black/50 transition-all duration-200"
             >
-              {blog.categories?.[0]?.name || "General"}
+              {categoryName}
             </Badge>
           </div>
         </div>
@@ -250,13 +155,12 @@ const BlogCardComponent: React.FC<BlogCardProps> = ({
   );
 };
 
-// Memoize BlogCard to prevent unnecessary re-renders during scroll
-const BlogCard = memo(BlogCardComponent, (prevProps, nextProps) => {
-  return (
+const BlogCard = memo(
+  BlogCardComponent,
+  (prevProps, nextProps) =>
     prevProps.blog._id === nextProps.blog._id &&
     prevProps.layout === nextProps.layout
-  );
-});
+);
 
 BlogCard.displayName = "BlogCard";
 

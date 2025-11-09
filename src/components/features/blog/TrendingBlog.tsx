@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/common/wrappers/Button";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Blog } from "@/types/apisInterfaces/api";
 import { AnimatePresence, motion } from "framer-motion";
@@ -130,7 +130,7 @@ const TrendingBlog: React.FC<TrendingBlogProps> = ({ blogs, isLoading }) => {
       </Button>
 
       <Link
-        to={`/preview/${currentBlog._id}`}
+        to={`/read/${currentBlog._id}`}
         className="absolute bottom-0 left-0 right-0 p-8 text-white z-10"
       >
         <div className="inline-block mb-4">

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { GoogleIcon } from "@/components/icons/GoogleIcon";
 import { Button } from "@/components/ui/button";
-import Checkbox from "@/components/common/wrappers/Checkbox";
+import { Checkbox } from "@/components/ui/checkbox";
 import { GithubIcon } from "@/components/icons/GithubIcon";
 import { useAuth } from "@/store/auth";
 import { useNavigate } from "react-router-dom";

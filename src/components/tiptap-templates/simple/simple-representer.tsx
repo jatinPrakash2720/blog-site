@@ -253,11 +253,10 @@ export function SimpleRepresenter({
                 </Button>
               ) : (
                 <Button
-                  variant="default"
-                  size="sm"
+                  size="lg"
                   onClick={handleFollow}
                   disabled={isFollowingLoading}
-                  className="gap-2"
+                  className="bg-black hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-200 text-white dark:text-black hover:text-white px-8 py-3 text-lg font-medium rounded-full gap-2"
                 >
                   <UserPlus className="h-4 w-4" />
                   Follow

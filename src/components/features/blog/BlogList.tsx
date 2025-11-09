@@ -1,22 +1,21 @@
 import type React from "react";
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo, memo } from "react";
 import BlogCard from "./BlogCard";
 import BlogCardCompact from "./BlogCardCompact";
 import BlogCardSkeleton from "./BlogCardSkeleton";
 import BlogCardCompactSkeleton from "./BlogCardCompactSkeleton";
 import type { LayoutType } from "../../common/subComps/layout-toggle";
-import { useBlogs } from "../../../store/blog"; // Import the hook
-import { gsap } from "gsap";
+import { useBlogs } from "../../../store/blog";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface BlogListProps {
   layout?: LayoutType;
-  activeFilter: string; // New prop to decide which blogs to show
+  activeFilter?: string; // Optional prop to decide which blogs to show
 }
 
 const BlogList: React.FC<BlogListProps> = ({
   layout = "square",
-  activeFilter,
+  activeFilter = "explore", // Default to explore (all blogs)
 }) => {
   // Get the blog arrays and loading state directly from the context
   const {
@@ -29,26 +28,40 @@ const BlogList: React.FC<BlogListProps> = ({
     fetchFollowingFeed,
     fetchBlogsByCategory,
   } = useBlogs();
-  console.log(allBlogs);
-  // Decide which array of blogs to display based on the active filter
-  const blogsToDisplay = activeFilter === "for-you" ? feedBlogs : allBlogs;
-  const currentPagination =
-    activeFilter === "for-you" ? feedPagination : pagination;
+
+  // Memoize blogs selection to prevent unnecessary recalculations
+  const blogsToDisplay = useMemo(
+    () => (activeFilter === "for-you" ? feedBlogs : allBlogs),
+    [activeFilter, feedBlogs, allBlogs]
+  );
+  const currentPagination = useMemo(
+    () => (activeFilter === "for-you" ? feedPagination : pagination),
+    [activeFilter, feedPagination, pagination]
+  );
   const gridRef = useRef<HTMLDivElement>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const isMobile = useIsMobile(1024); // Tablet breakpoint (< 1024px)
 
-  // Grid classes - use compact cards for mobile/tablet, regular cards for desktop
-  // Mobile (< 768px): 1 column with compact cards
-  // Tablet (768px - 1023px): 2 columns with compact cards
-  // Desktop (>= 1024px): 2 columns at md, 3 columns at xl with regular cards
-  const gridClasses = isMobile
-    ? "grid grid-cols-1 md:grid-cols-2 gap-3.5" // Mobile: 1 col, Tablet: 2 cols
-    : layout === "landscape"
-    ? "grid grid-cols-1 gap-3.5"
-    : "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5";
+  // Memoize grid classes to prevent recalculation
+  const gridClasses = useMemo(
+    () =>
+      isMobile
+        ? "grid grid-cols-1 md:grid-cols-2 gap-3.5"
+        : "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5",
+    [isMobile]
+  );
+
+  // Memoize skeleton counts to prevent recalculation
+  const skeletonCount = useMemo(
+    () => (isMobile ? 3 : 6),
+    [isMobile]
+  );
+  const loadingSkeletonCount = useMemo(
+    () => (isMobile ? 2 : 3),
+    [isMobile]
+  );
 
   // Reset page and fetch first page when filter changes
   useEffect(() => {
@@ -104,8 +117,10 @@ const BlogList: React.FC<BlogListProps> = ({
     fetchBlogsByCategory,
   ]);
 
-  // Intersection Observer for infinite scroll
+  // Intersection Observer for infinite scroll - optimized
   useEffect(() => {
+    if (!currentPagination?.hasNextPage) return;
+
     const observer = new IntersectionObserver(
       (entries) => {
         const [entry] = entries;
@@ -115,7 +130,7 @@ const BlogList: React.FC<BlogListProps> = ({
       },
       {
         threshold: 0.1,
-        rootMargin: "200px", // Start loading before reaching bottom
+        rootMargin: "100px", // Reduced from 200px to prevent premature loading
       }
     );
 
@@ -129,43 +144,14 @@ const BlogList: React.FC<BlogListProps> = ({
         observer.unobserve(currentLoadMoreRef);
       }
     };
-  }, [loadMoreBlogs, loading, isLoadingMore]);
+  }, [loadMoreBlogs, loading, isLoadingMore, currentPagination?.hasNextPage]);
 
-  // Stagger animation for cards when they appear
-  useEffect(() => {
-    if (!gridRef.current || loading || blogsToDisplay.length === 0) return;
-
-    const cards = gridRef.current.querySelectorAll("[data-blog-card]");
-    if (cards.length === 0) return;
-
-    // Reset all cards to initial state
-    gsap.set(cards, {
-      opacity: 0,
-      y: 30,
-      scale: 0.95,
-    });
-
-    // Animate cards with stagger
-    gsap.to(cards, {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      duration: 0.6,
-      ease: "power3.out",
-      stagger: {
-        amount: 0.4,
-        from: "start",
-      },
-    });
-  }, [blogsToDisplay.length, loading, activeFilter]);
 
   // Show skeleton loaders when loading (initial or loading more)
   if (loading && blogsToDisplay.length === 0) {
     return (
       <div className={gridClasses}>
-        {Array.from({
-          length: isMobile ? 3 : layout === "landscape" ? 3 : 6,
-        }).map((_, index) =>
+        {Array.from({ length: skeletonCount }).map((_, index) =>
           isMobile ? (
             <BlogCardCompactSkeleton key={`skeleton-${index}`} />
           ) : (
@@ -191,16 +177,13 @@ const BlogList: React.FC<BlogListProps> = ({
   return (
     <>
       <div ref={gridRef} className={gridClasses}>
-        {/* Render actual blog cards */}
-        {blogsToDisplay.map((blog) => (
-          <div key={blog._id} data-blog-card>
-            {isMobile ? (
-              <BlogCardCompact blog={blog} />
-            ) : (
-              <BlogCard layout={layout} blog={blog} />
-            )}
-          </div>
-        ))}
+        {blogsToDisplay.map((blog) =>
+          isMobile ? (
+            <BlogCardCompact key={blog._id} blog={blog} />
+          ) : (
+            <BlogCard key={blog._id} layout={layout} blog={blog} />
+          )
+        )}
       </div>
       {/* Intersection Observer trigger element and skeleton loaders */}
       {currentPagination?.hasNextPage && (
@@ -208,9 +191,7 @@ const BlogList: React.FC<BlogListProps> = ({
           {/* Show skeleton loaders when loading more */}
           {(isLoadingMore || (loading && blogsToDisplay.length > 0)) && (
             <div className={gridClasses}>
-              {Array.from({
-                length: isMobile ? 2 : layout === "landscape" ? 2 : 3,
-              }).map((_, index) =>
+              {Array.from({ length: loadingSkeletonCount }).map((_, index) =>
                 isMobile ? (
                   <BlogCardCompactSkeleton key={`loading-skeleton-${index}`} />
                 ) : (
@@ -230,4 +211,4 @@ const BlogList: React.FC<BlogListProps> = ({
   );
 };
 
-export default BlogList;
+export default memo(BlogList);

@@ -14,7 +14,8 @@ import EditorPage from "./pages/EditorPage";
 import AuthPage from "./pages/AuthPage";
 import Loader from "./components/ui/Loader";
 import LandingPage from "./pages/LandingPage";
-import PreviewPage from "./pages/RepresentationPage";
+import ReadPage from "./pages/ReadPage";
+import RepresentationPage from "./pages/RepresentationPage";
 
 function App() {
   return (
@@ -37,11 +38,21 @@ function App() {
                 }
               />
               <Route
-                path="/preview/:blogId"
+                path="/read/:blogId"
                 element={
                   <PrivateRoute>
                     <MainLayout>
-                      <PreviewPage />
+                      <ReadPage />
+                    </MainLayout>
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/representation/:blogId"
+                element={
+                  <PrivateRoute>
+                    <MainLayout>
+                      <RepresentationPage />
                     </MainLayout>
                   </PrivateRoute>
                 }

@@ -79,7 +79,7 @@ export const BlogStatsBar: React.FC<BlogStatsBarProps> = ({
   };
 
   return (
-    <div className="flex items-center justify-between px-8 py-4  border-b border-border/30 bg-background/50 backdrop-blur-sm rounded-2xl max-md:px-6 max-md:py-3">
+    <div className="flex items-center justify-between px-8 py-4 border-b border-border/30 bg-white/50 dark:bg-neutral-900/50 backdrop-blur-xl rounded-2xl max-md:px-6 max-md:py-3">
       <div className="flex items-center gap-6">
         {/* Like Button */}
         <Button
@@ -95,16 +95,16 @@ export const BlogStatsBar: React.FC<BlogStatsBarProps> = ({
           )}
         >
           {isLiked ? (
-            <Heart className="h-5 w-5 fill-current" />
+            <Heart size={28} className="fill-current" />
           ) : (
-            <ThumbsUp className="h-5 w-5" />
+            <ThumbsUp size={28} />
           )}
           <span className="text-sm font-medium">{likeCount}</span>
         </Button>
 
         {/* Comment Count */}
         <div className="flex items-center gap-2 px-3 py-2 text-foreground/70">
-          <MessageCircle className="h-5 w-5" />
+          <MessageCircle size={28} />
           <span className="text-sm font-medium">{blog.commentCount ?? 0}</span>
         </div>
       </div>
@@ -116,7 +116,7 @@ export const BlogStatsBar: React.FC<BlogStatsBarProps> = ({
         onClick={handleShare}
         className="flex items-center gap-2 px-3 py-2 rounded-lg text-foreground/70 hover:text-foreground hover:bg-muted/50 transition-all duration-200"
       >
-        <Share2 className="h-5 w-5" />
+        <Share2 size={28} />
         <span className="text-sm font-medium">Share</span>
       </Button>
     </div>

@@ -34,7 +34,7 @@ const Footer: React.FC<FooterProps> = ({ variant = "full" }) => {
 
   // Full version for the bottom of the page
   return (
-    <footer className="w-full border-t bg-white dark:bg-gray-900 dark:border-gray-800 mt-12">
+    <footer className="w-full border-t bg-white dark:bg-black dark:border-gray-800 mt-12">
       <div className="container mx-auto py-8 px-4 text-center text-gray-500 dark:text-gray-400">
         <p>
           &copy; {new Date().getFullYear()} Bloggr Inc. All rights reserved.

@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Home, Compass, Edit2, User, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/store/auth";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface NavItem {
   id: string;
@@ -15,7 +16,16 @@ interface NavItem {
 const MobileNavBar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, currentUser } = useAuth();
+
+  const getInitials = (name: string) => {
+    if (!name) return "U";
+    const parts = name.trim().split(" ");
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  };
 
   // Define navigation items
   const navItems: NavItem[] = [
@@ -114,14 +124,29 @@ const MobileNavBar: React.FC = () => {
                 <div className="absolute inset-0 bg-primary/10 dark:bg-primary/20 rounded-xl" />
               )}
 
-              {/* Icon */}
+              {/* Icon or Avatar for Profile */}
               <div className="relative z-10">
-                <Icon
-                  className={cn(
+                {item.id === "profile" && currentUser ? (
+                  <Avatar className={cn(
                     "w-5 h-5 transition-transform duration-200",
-                    active && "scale-110"
-                  )}
-                />
+                    active && "scale-110 ring-2 ring-primary ring-offset-2"
+                  )}>
+                    <AvatarImage
+                      src={currentUser.avatar}
+                      alt={currentUser.fullName || "Profile"}
+                    />
+                    <AvatarFallback className="text-xs">
+                      {getInitials(currentUser.fullName || currentUser.username || "U")}
+                    </AvatarFallback>
+                  </Avatar>
+                ) : (
+                  <Icon
+                    className={cn(
+                      "w-5 h-5 transition-transform duration-200",
+                      active && "scale-110"
+                    )}
+                  />
+                )}
               </div>
 
               {/* Label - always show, but emphasize active */}

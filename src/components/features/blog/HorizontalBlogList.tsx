@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useBlogs } from "@/store/blog";
-import BlogCard from "./BlogCard";
+import BlogCardCompact from "./BlogCardCompact";
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import Loader from "@/components/ui/Loader";
@@ -74,8 +74,8 @@ export const HorizontalBlogList: React.FC<HorizontalBlogListProps> = ({
       <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-border/20 scrollbar-track-transparent pb-4">
         <div className="flex gap-4 min-w-max">
           {filteredBlogs.map((blog) => (
-            <div key={blog._id} className="shrink-0 w-[320px]">
-              <BlogCard blog={blog} layout="landscape" />
+            <div key={blog._id} className="shrink-0 w-[280px]">
+              <BlogCardCompact blog={blog} />
             </div>
           ))}
         </div>

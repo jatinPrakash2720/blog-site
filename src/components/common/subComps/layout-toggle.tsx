@@ -1,10 +1,10 @@
 "use client";
 
 import type React from "react";
-import { Grid,Rows} from "lucide-react";
+import { Grid } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export type LayoutType = "square" | "landscape";
+export type LayoutType = "square";
 
 interface LayoutToggleProps {
   layout: LayoutType;
@@ -35,18 +35,6 @@ export const LayoutToggle: React.FC<LayoutToggleProps> = ({
         aria-label="Square layout"
       >
         <Grid className="w-4 h-4" />
-      </button>
-      <button
-        onClick={() => onLayoutChange("landscape")}
-        className={cn(
-          "p-1.5 rounded-full transition-colors duration-200",
-          layout === "landscape"
-            ? "bg-primary text-primary-foreground"
-            : "text-muted-foreground hover:bg-background/70"
-        )}
-        aria-label="Landscape layout"
-      >
-        <Rows className="w-4 h-4" />
       </button>
     </div>
   );

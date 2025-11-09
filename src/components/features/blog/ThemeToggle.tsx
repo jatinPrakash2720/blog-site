@@ -1,6 +1,6 @@
 // --- UI Primitives ---
 import React from "react";
-import {Button} from "@/components/common/wrappers/Button";
+import { Button } from "@/components/ui/button";
 
 // --- Icons ---
 import { MoonStarIcon } from "lucide-react";
@@ -21,7 +21,7 @@ export function ToggleTheme() {
     <Button
       onClick={toggleDarkMode}
       aria-label={`Switch to ${isDarkMode ? "light" : "dark"} mode`}
-      data-style="ghost"
+      variant="ghost"
       className="theme-toggle-button"
     >
       {isDarkMode ? (

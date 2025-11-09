@@ -11,8 +11,10 @@ import {
 } from "@/components/features/blog/BlogDetailsDrawer";
 import type { Blog } from "@/types/apisInterfaces/api";
 import Loader from "@/components/ui/Loader";
-import Header from "@/components/layout/Header";
+import Header1 from "@/components/layout/Header1";
 import { useEditorContextSafe } from "@/store/editor";
+import MobileNavBar from "@/components/layout/MobileNavBar";
+import DraftBlogsSidebar from "@/components/features/blog/DraftBlogsSidebar";
 
 type EditorView = "fullscreen" | "preview-fullscreen" | "publish";
 
@@ -24,7 +26,7 @@ const EditorPage: React.FC<EditorPageProps> = () => {
   // isStandalone is kept for future use but not currently needed
   const [view, setView] = useState<EditorView>("fullscreen");
   const [createdBlog, setCreatedBlog] = useState<Blog | null>(null);
-  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const { initiateBlogCreation, updateBlogDetailsAction, loading } = useBlogs();
   // const { currentUser } = useAuth();
@@ -122,8 +124,17 @@ const EditorPage: React.FC<EditorPageProps> = () => {
 
   // Always render fullscreen mode
   return (
-    <>
-      <Header
+    <div className="min-h-screen relative">
+      {/* Noise Overlay */}
+      <div
+        className="absolute inset-0 pointer-events-none opacity-[0.15] dark:opacity-[0.1] mix-blend-overlay"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix in='colorNoise' type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+          backgroundSize: "200px 200px",
+        }}
+      />
+      {/* Header1 - All screen sizes */}
+      <Header1
         disableScrollEffect
         isEditorMode={true}
         isPreviewMode={view === "preview-fullscreen"}
@@ -132,19 +143,33 @@ const EditorPage: React.FC<EditorPageProps> = () => {
         onBackToEditor={
           view === "preview-fullscreen" ? handleBackToEditor : undefined
         }
-        isVisible={isHeaderVisible}
+        isVisible={true}
       />
-      <SimpleEditor
-        initialContent={content}
-        isEditable={view !== "preview-fullscreen"}
-        isFullscreenMode={true}
-        onBackToEditor={handleBackToEditor}
-        isHeaderVisible={isHeaderVisible}
-        onToggleHeader={() => setIsHeaderVisible(!isHeaderVisible)}
-        showNotesButton={view !== "preview-fullscreen"}
-        showAISearchButton={view !== "preview-fullscreen"}
-      />
-    </>
+
+      {/* Main Content Area with Sidebar */}
+      <div className="relative">
+        {/* Editor */}
+        <SimpleEditor
+          initialContent={content}
+          isEditable={view !== "preview-fullscreen"}
+          isFullscreenMode={true}
+          onBackToEditor={handleBackToEditor}
+          showNotesButton={view !== "preview-fullscreen"}
+          showAISearchButton={view !== "preview-fullscreen"}
+          onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+        />
+
+        {/* Drafts Sidebar */}
+        <DraftBlogsSidebar
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
+          onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+        />
+      </div>
+
+      {/* Mobile Navigation Bar - Mobile and Tablet only */}
+      <MobileNavBar />
+    </div>
   );
 };
 

@@ -3,6 +3,7 @@ import type {
   ChangePasswordData,
   Blog,
   PaginatedBlogResponse,
+  PaginatedCommentResponse,
   GetBlogsParams,
   UpdateBlogTitlePayload,
   UpdateBlogContentPayload,
@@ -176,15 +177,21 @@ export interface CategoryProviderProps {
 export interface ISocialContext {
   // State
   comments: Comment[];
+  commentPagination: PaginatedCommentResponse | null;
   followers: User[];
   following: User[];
+  suggestedUsers: User[];
   collections: SaveCollection[];
   likedByUsers: User[];
   loading: boolean;
   error: string | null;
 
   // Comment Functions
-  fetchComments: (blogId: string) => Promise<void>;
+  fetchComments: (
+    blogId: string,
+    params?: PaginationParams,
+    append?: boolean
+  ) => Promise<void>;
   addComment: (blogId: string, content: string) => Promise<boolean>;
   deleteComment: (commentId: string) => Promise<boolean>;
 
@@ -198,6 +205,7 @@ export interface ISocialContext {
   toggleFollowUser: (userId: string) => Promise<boolean>;
   fetchFollowers: (userId: string) => Promise<void>;
   fetchFollowing: (userId: string) => Promise<void>;
+  fetchSuggestedUsers: () => Promise<void>;
 
   // Save Functions
   createSaveCollection: (data: CreateSaveCollectionPayload) => Promise<boolean>;

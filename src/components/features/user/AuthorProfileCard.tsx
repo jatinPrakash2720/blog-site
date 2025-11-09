@@ -1,6 +1,6 @@
 import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/common/wrappers/Button";
+import { Button } from "@/components/ui/button";
 import type { User } from "@/types/apisInterfaces/api";
 
 interface AuthorProfileCardProps {

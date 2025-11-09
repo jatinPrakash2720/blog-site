@@ -18,3 +18,7 @@ export const getUserFollowers = (userId: string) => {
 export const getUserFollowing = (userId: string) => {
   return apiClient.get<ApiResponse<User[]>>(`/follow/following/${userId}`);
 };
+
+export const getSuggestedUsers = () => {
+  return apiClient.get<ApiResponse<User[]>>(`/follow/suggested`);
+};

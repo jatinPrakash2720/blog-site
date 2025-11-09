@@ -1,8 +1,8 @@
 "use client";
 
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent } from "@/components/common/wrappers/Card";
-import AspectRatio from "@/components/common/wrappers/AspectRatio";
+import { Card, CardContent } from "@/components/ui/card";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 import type { LayoutType } from "../../common/subComps/layout-toggle";
 
 interface BlogCardSkeletonProps {
@@ -12,61 +12,6 @@ interface BlogCardSkeletonProps {
 const BlogCardSkeleton: React.FC<BlogCardSkeletonProps> = ({
   layout = "square",
 }) => {
-  if (layout === "landscape") {
-    return (
-      <Card className="hover:shadow-3xl bg-white/50 dark:bg-neutral-900/50 backdrop-blur-xl border dark:border-neutral-800 border-black/10 rounded-[32px] shadow-2xl mt-3.5">
-        <CardContent className="p-4 flex gap-4 relative z-10">
-          {/* Left side content */}
-          <div className="flex-1 flex flex-col justify-between min-h-[200px]">
-            {/* Author info */}
-            <div className="flex items-center gap-2 mb-3">
-              <Skeleton className="h-10 w-10 rounded-full" />
-              <Skeleton className="h-4 w-24" />
-            </div>
-
-            {/* Tags */}
-            <div className="flex gap-2 mb-4">
-              <Skeleton className="h-6 w-16 rounded-full" />
-              <Skeleton className="h-6 w-20 rounded-full" />
-            </div>
-
-            {/* Title */}
-            <div className="mb-3">
-              <Skeleton className="h-6 w-full mb-2" />
-              <Skeleton className="h-6 w-3/4" />
-            </div>
-
-            {/* Content */}
-            <div className="mb-4 flex-1">
-              <Skeleton className="h-4 w-full mb-2" />
-              <Skeleton className="h-4 w-full mb-2" />
-              <Skeleton className="h-4 w-2/3" />
-            </div>
-
-            {/* Action Bar */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <Skeleton className="h-5 w-12" />
-                <Skeleton className="h-5 w-12" />
-              </div>
-              <div className="flex items-center gap-3">
-                <Skeleton className="h-5 w-5 rounded" />
-                <Skeleton className="h-5 w-5 rounded" />
-              </div>
-            </div>
-          </div>
-
-          {/* Right side image */}
-          <div className="w-92 shrink-0">
-            <AspectRatio ratio={16 / 9}>
-              <Skeleton className="w-full h-full rounded-xl" />
-            </AspectRatio>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
     <Card className="hover:shadow-3xl bg-white/50 dark:bg-neutral-900/50 backdrop-blur-xl border dark:border-neutral-800 border-black/10 rounded-[32px] shadow-2xl mt-3.5">
       <div className="block relative z-10">

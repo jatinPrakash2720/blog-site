@@ -1,16 +1,29 @@
 "use client";
 
+import { useEffect, useRef, memo } from "react";
 import { Link } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import Badge from "@/components/common/wrappers/Badge";
-import { ThumbsUp, MessageCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import type { Blog } from "@/types/apisInterfaces/api";
+import { gsap } from "gsap";
 
 interface BlogCardCompactProps {
   blog: Blog;
 }
 
 const BlogCardCompact: React.FC<BlogCardCompactProps> = ({ blog }) => {
+  const cardRef = useRef<HTMLAnchorElement>(null);
+
+  // Optimized animation - lighter and faster
+  useEffect(() => {
+    if (!cardRef.current) return;
+    gsap.fromTo(
+      cardRef.current,
+      { opacity: 0, y: 10 },
+      { opacity: 1, y: 0, duration: 0.3, ease: "power2.out" }
+    );
+  }, []);
+
   const getInitials = (name: string) => {
     if (!name) return "";
     return name
@@ -22,7 +35,8 @@ const BlogCardCompact: React.FC<BlogCardCompactProps> = ({ blog }) => {
 
   return (
     <Link
-      to={`/preview/${blog._id}`}
+      ref={cardRef}
+      to={`/read/${blog._id}`}
       className="block relative group overflow-hidden rounded-2xl aspect-video w-full"
     >
       {/* Thumbnail as background */}
@@ -87,4 +101,7 @@ const BlogCardCompact: React.FC<BlogCardCompactProps> = ({ blog }) => {
   );
 };
 
-export default BlogCardCompact;
+export default memo(
+  BlogCardCompact,
+  (prevProps, nextProps) => prevProps.blog._id === nextProps.blog._id
+);

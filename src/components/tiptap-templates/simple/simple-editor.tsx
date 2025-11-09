@@ -33,6 +33,13 @@ import { useIsMobile } from "@/hooks/use-mobile";
 // --- Components ---
 import ThemeToggle from "@/components/common/wrappers/ThemeToggle";
 import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useCategories } from "@/store/category";
 
 // --- Lib ---
 import { handleImageUpload, MAX_FILE_SIZE } from "@/lib/tiptap-utils";
@@ -43,8 +50,9 @@ import {
   Edit2,
   Trash2,
   StickyNote,
-  ChevronUp,
   ChevronDown,
+  UploadCloud,
+  Image as ImageIcon,
 } from "lucide-react";
 
 // --- Styles ---
@@ -172,15 +180,11 @@ const globalStyles = `
   }
 `;
 
-import { BubbleMenu as BubbleMenuExtension } from "@tiptap/extension-bubble-menu";
-import { EditorBubbleMenu } from "@/components/features/blog/BubbleMenu";
+import { EditorToolbar } from "@/components/features/blog/EditorToolbar";
 
 // import { useNavigate } from "react-router-dom";
 // import { useAuth } from "@/store/auth";
-import {
-  Button,
-  Button as WrapperButton,
-} from "@/components/common/wrappers/Button";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useEditorContextSafe } from "@/store/editor";
 
@@ -189,10 +193,9 @@ interface SimpleEditorProps {
   initialContent?: string;
   isEditable?: boolean;
   isFullscreenMode?: boolean;
-  isHeaderVisible?: boolean;
-  onToggleHeader?: () => void;
   showNotesButton?: boolean;
   showAISearchButton?: boolean;
+  onToggleSidebar?: () => void;
 }
 
 // Header for preview mode (non-fullscreen)
@@ -202,7 +205,7 @@ const PreviewHeader: React.FC<{ onBackToEditor?: () => void }> = ({
   <header className="fixed top-0 left-0 right-0 z-50 p-4">
     <div className="mx-auto max-w-7xl flex justify-end items-center">
       <div className="flex items-center gap-2 p-2 rounded-full bg-background/80 backdrop-blur-md border border-border shadow-lg">
-        <WrapperButton
+        <Button
           onClick={onBackToEditor}
           variant="ghost"
           size="sm"
@@ -210,7 +213,7 @@ const PreviewHeader: React.FC<{ onBackToEditor?: () => void }> = ({
         >
           <Edit className="w-4 h-4" />
           <span>Back to Editor</span>
-        </WrapperButton>
+        </Button>
         <ThemeToggle />
       </div>
     </div>
@@ -222,14 +225,31 @@ export function SimpleEditor({
   initialContent,
   isEditable = true,
   isFullscreenMode = false,
-  isHeaderVisible = true,
-  onToggleHeader,
   showNotesButton = true,
   showAISearchButton = true,
+  onToggleSidebar,
 }: SimpleEditorProps) {
   const { setEditor, setContent, setWordCount, title, setTitle } =
     useEditorContextSafe();
   const isMobile = useIsMobile();
+  
+  // Get categories - CategoryProvider should be available in main.tsx
+  const categoriesContext = useCategories();
+  const { 
+    topLevelCategories = [], 
+    subCategories = [], 
+    fetchTopLevelCategories, 
+    fetchSubCategories 
+  } = categoriesContext || {
+    topLevelCategories: [],
+    subCategories: [],
+    fetchTopLevelCategories: async () => {},
+    fetchSubCategories: async () => {},
+  };
+  const [thumbnail, setThumbnail] = React.useState<File | string | null>(null);
+  const [thumbnailPreview, setThumbnailPreview] = React.useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = React.useState<{ _id: string; name: string } | null>(null);
+  const [selectedSubCategory, setSelectedSubCategory] = React.useState<{ _id: string; name: string } | null>(null);
   const [mobileView, setMobileView] = React.useState<
     "main" | "highlighter" | "link"
   >("main");
@@ -277,9 +297,6 @@ export function SimpleEditor({
           openOnClick: false,
           enableClickSelection: true,
         },
-      }),
-      BubbleMenuExtension.configure({
-        pluginKey: "bubbleMenu",
       }),
       HorizontalRule,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
@@ -343,13 +360,49 @@ export function SimpleEditor({
 
   const isPreviewMode = !isEditable;
 
-  // Header toggle functionality
-  const toggleHeader = () => {
-    console.log(
-      "Toggle header clicked, current isHeaderVisible:",
-      isHeaderVisible
-    );
-    onToggleHeader?.();
+  // Handle thumbnail upload
+  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setThumbnail(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setThumbnailPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveThumbnail = () => {
+    setThumbnail(null);
+    setThumbnailPreview(null);
+  };
+
+  // Fetch categories on mount
+  React.useEffect(() => {
+    if (fetchTopLevelCategories && typeof fetchTopLevelCategories === 'function') {
+      fetchTopLevelCategories().catch((error) => {
+        console.error("Failed to fetch categories:", error);
+      });
+    }
+  }, []); // Only run once on mount
+
+  // Fetch subcategories when category is selected
+  React.useEffect(() => {
+    if (selectedCategory && fetchSubCategories && typeof fetchSubCategories === 'function') {
+      fetchSubCategories(selectedCategory._id).catch((error) => {
+        console.error("Failed to fetch subcategories:", error);
+      });
+      setSelectedSubCategory(null); // Reset subcategory when category changes
+    }
+  }, [selectedCategory?._id]); // Only depend on category ID, not the function
+
+  const handleCategorySelect = (category: { _id: string; name: string }) => {
+    setSelectedCategory(category);
+  };
+
+  const handleSubCategorySelect = (subCategory: { _id: string; name: string }) => {
+    setSelectedSubCategory(subCategory);
   };
 
   // Note management functions
@@ -653,7 +706,7 @@ export function SimpleEditor({
           isFullscreenMode && [
             "w-screen h-screen fixed top-0 left-0 z-[40]", // Lower z-index than header (z-50)
             "border-none flex flex-col justify-center items-center",
-            isHeaderVisible ? "pt-[100px]" : "pt-0", // Dynamic space for header
+            "pt-[100px] lg:pt-[100px]", // Space for header and toolbar
           ]
         )}
       >
@@ -674,19 +727,85 @@ export function SimpleEditor({
               // "dark:shadow-[0_0_0_2px_rgba(255,255,255,0.2)] dark:shadow-[0_8px_32px_rgba(255,255,255,0.15)] dark:shadow-[0_16px_64px_rgba(255,255,255,0.1)] dark:shadow-[0_32px_128px_rgba(255,255,255,0.05)]",
               // More visible border
               "border-2 border-border/80 dark:border-1 dark:border-white/15",
-              "overflow-y-auto", // Move scrollbar to main container
-              isHeaderVisible
-                ? "min-h-[calc(100vh-180px)] max-h-[calc(100vh-180px)]"
-                : "min-h-[calc(100vh-80px)] max-h-[calc(100vh-80px)]",
-              "flex flex-col mx-auto",
-              // Responsive adjustments
-              isHeaderVisible
-                ? "max-md:max-w-[90%] max-md:min-h-[calc(100vh-140px)] max-md:max-h-[calc(100vh-140px)]"
-                : "max-md:max-w-[90%] max-md:min-h-[calc(100vh-40px)] max-md:max-h-[calc(100vh-40px)]"
+                    "overflow-y-auto", // Move scrollbar to main container
+                    "min-h-[calc(100vh-180px)] max-h-[calc(100vh-180px)]",
+                    "flex flex-col mx-auto",
+                    // Responsive adjustments
+                    "max-md:max-w-[90%] max-md:min-h-[calc(100vh-140px)] max-md:max-h-[calc(100vh-140px)]"
             )}
           >
+            {/* Thumbnail Input Section */}
+            <div className="px-8 py-8 pb-4 border-b border-border/30 max-md:px-6 max-md:py-6 max-md:pb-4">
+              <label
+                htmlFor="thumbnail-upload"
+                className={cn(
+                  "block w-full min-h-[200px] rounded-lg border-2 border-dashed",
+                  "border-black/20 dark:border-white/20",
+                  "bg-muted/30 dark:bg-muted/20",
+                  "hover:border-black/40 dark:hover:border-white/40",
+                  "hover:bg-muted/50 dark:hover:bg-muted/30",
+                  "transition-all duration-200 cursor-pointer",
+                  "flex flex-col items-center justify-center",
+                  "relative overflow-hidden",
+                  thumbnailPreview && "border-solid"
+                )}
+              >
+                {thumbnailPreview ? (
+                  <>
+                    <img
+                      src={thumbnailPreview}
+                      alt="Thumbnail preview"
+                      className="w-full h-full object-cover"
+                    />
+                    {!isPreviewMode && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleRemoveThumbnail();
+                        }}
+                        className={cn(
+                          "absolute top-2 right-2",
+                          "h-8 w-8 rounded-full",
+                          "bg-black/70 dark:bg-white/70",
+                          "text-white dark:text-black",
+                          "flex items-center justify-center",
+                          "hover:bg-black dark:hover:bg-white",
+                          "transition-colors duration-200",
+                          "z-10"
+                        )}
+                        aria-label="Remove thumbnail"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12">
+                    <UploadCloud className="h-12 w-12 mb-4 text-muted-foreground/60" />
+                    <p className="text-sm font-medium text-foreground mb-1">
+                      Click to upload thumbnail
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      PNG, JPG, GIF up to 10MB
+                    </p>
+                  </div>
+                )}
+                {!isPreviewMode && (
+                  <input
+                    id="thumbnail-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleThumbnailChange}
+                    className="hidden"
+                  />
+                )}
+              </label>
+            </div>
+
             {/* Title Input for Fullscreen */}
-            <div className="simple-editor-title px-8 py-8 pb-4 border-b border-border/30 max-md:px-6 max-md:py-6 max-md:pb-4">
+            <div className="simple-editor-title px-8 py-8 pb-2 max-md:px-6 max-md:py-6 max-md:pb-2">
               <Input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -696,21 +815,103 @@ export function SimpleEditor({
               />
             </div>
 
+            {/* Category and Subcategory Dropdowns */}
+            <div className="px-8 pb-2 max-md:px-6 max-md:pb-2 flex gap-3 flex-wrap items-center">
+              {/* Category Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    disabled={isPreviewMode}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200",
+                      "backdrop-blur-sm bg-white/40 dark:bg-black/40",
+                      "border border-white/50 dark:border-white/20",
+                      "text-gray-800 dark:text-gray-200",
+                      "hover:bg-white/50 dark:hover:bg-black/50",
+                      "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black/20 dark:focus:ring-white/20",
+                      "disabled:opacity-50 disabled:cursor-not-allowed",
+                      selectedCategory && "bg-green-500/80 dark:bg-green-600/80 text-white border-none hover:bg-green-600/80 dark:hover:bg-green-700/80"
+                    )}
+                  >
+                    {selectedCategory ? selectedCategory.name : "Select Category"}
+                    <ChevronDown className="h-3 w-3 opacity-70" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="max-h-[300px] overflow-y-auto">
+                  {topLevelCategories.length > 0 ? (
+                    topLevelCategories.map((category) => (
+                      <DropdownMenuItem
+                        key={category._id}
+                        onClick={() => handleCategorySelect(category)}
+                        className={cn(
+                          selectedCategory?._id === category._id && "bg-green-500/20 dark:bg-green-600/20"
+                        )}
+                      >
+                        {category.name}
+                      </DropdownMenuItem>
+                    ))
+                  ) : (
+                    <DropdownMenuItem disabled>No categories available</DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Subcategory Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    disabled={isPreviewMode || !selectedCategory}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200",
+                      "backdrop-blur-sm bg-white/40 dark:bg-black/40",
+                      "border border-white/50 dark:border-white/20",
+                      "text-gray-800 dark:text-gray-200",
+                      "hover:bg-white/50 dark:hover:bg-black/50",
+                      "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black/20 dark:focus:ring-white/20",
+                      "disabled:opacity-50 disabled:cursor-not-allowed",
+                      selectedSubCategory && "bg-green-600/60 dark:bg-green-700/60 text-white border-none hover:bg-green-700/60 dark:hover:bg-green-800/60",
+                      !selectedCategory && "opacity-50 cursor-not-allowed"
+                    )}
+                  >
+                    {selectedSubCategory ? selectedSubCategory.name : "Select Subcategory"}
+                    <ChevronDown className="h-3 w-3 opacity-70" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="max-h-[300px] overflow-y-auto">
+                  {selectedCategory && subCategories.length > 0 ? (
+                    subCategories.map((subCategory) => (
+                      <DropdownMenuItem
+                        key={subCategory._id}
+                        onClick={() => handleSubCategorySelect(subCategory)}
+                        className={cn(
+                          selectedSubCategory?._id === subCategory._id && "bg-green-600/20 dark:bg-green-700/20"
+                        )}
+                      >
+                        {subCategory.name}
+                      </DropdownMenuItem>
+                    ))
+                  ) : (
+                    <DropdownMenuItem disabled>
+                      {selectedCategory ? "No subcategories available" : "Select a category first"}
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
             {/* Editor Content */}
             <div className="simple-editor-content relative flex-1">
-              <EditorContext.Provider value={{ editor }}>
-                {/* Bubble Menu - only show in editable mode */}
-                {isEditable && (
-                  <EditorBubbleMenu
-                    editor={editor}
-                    onHighlighterClick={() => setMobileView("highlighter")}
-                    onLinkClick={() => setMobileView("link")}
-                    // onGoBack={handleGoBack}
-                    isMobile={isMobile}
-                    // onSave={handleSave}
-                    // onPreview={handlePreview}
-                  />
-                )}
+                    <EditorContext.Provider value={{ editor }}>
+                      {/* Editor Toolbar - only show in editable mode when text is selected */}
+                      {isEditable && (
+                        <EditorToolbar 
+                          editor={editor} 
+                          isHeaderVisible={true}
+                          onToggleSidebar={onToggleSidebar}
+                        />
+                      )}
 
                 <EditorContent
                   editor={editor}
@@ -742,14 +943,10 @@ export function SimpleEditor({
           <EditorContext.Provider value={{ editor }}>
             {/* Bubble Menu - only show in editable mode */}
             {isEditable && (
-              <EditorBubbleMenu
-                editor={editor}
-                onHighlighterClick={() => setMobileView("highlighter")}
-                onLinkClick={() => setMobileView("link")}
-                // onGoBack={handleGoBack}
-                isMobile={isMobile}
-                // onSave={handleSave}
-                // onPreview={handlePreview}
+              <EditorToolbar 
+                editor={editor} 
+                isHeaderVisible={true}
+                onToggleSidebar={onToggleSidebar}
               />
             )}
 
@@ -817,10 +1014,10 @@ export function SimpleEditor({
           </div>
         )}
 
-        {/* Sticky Notes Section */}
+        {/* Sticky Notes Section - Desktop only */}
         {showNotesButton && (
           <div
-            className="fixed z-40 max-w-xs select-none transition-all duration-300 ease-out"
+            className="hidden lg:block fixed z-40 max-w-xs select-none transition-all duration-300 ease-out"
             style={{
               left: `${notesPosition.x}px`,
               top: `${notesPosition.y}px`,
@@ -975,21 +1172,6 @@ export function SimpleEditor({
         )}
       </div>
 
-      {/* Header Toggle Button - Right Side */}
-      <div className="fixed top-24 right-6 z-[60]">
-        <Button
-          onClick={toggleHeader}
-          className="h-12 w-12 rounded-full bg-background border-2 border-border hover:bg-background/90 shadow-lg hover:shadow-xl transition-all duration-200"
-          size="icon"
-          title={isHeaderVisible ? "Hide Header" : "Show Header"}
-        >
-          {isHeaderVisible ? (
-            <ChevronUp className="h-5 w-5 text-foreground" />
-          ) : (
-            <ChevronDown className="h-5 w-5 text-foreground" />
-          )}
-        </Button>
-      </div>
     </>
   );
 }
