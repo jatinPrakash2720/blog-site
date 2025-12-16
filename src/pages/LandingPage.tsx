@@ -182,7 +182,7 @@ const LandingPage = () => {
 
         {/* Background Text Animation */}
         <h1
-          className="my-text fixed inset-0 flex items-end justify-center font-bold pointer-events-none -translate-y-[3.5%] sm:-translate-y-[3%] md:-translate-y-[2%] lg:-translate-y-[1%] xl:-translate-y-[0.5%] 2xl:translate-y-0"
+          className="my-text fixed inset-0 flex items-end justify-center font-bold pointer-events-none -translate-y-[6%] sm:-translate-y-[5.5%] md:-translate-y-[4.5%] lg:-translate-y-[3.5%] xl:-translate-y-[2.5%] 2xl:-translate-y-[1.5%]"
           style={{
             zIndex: 100,
             opacity: 0.3,

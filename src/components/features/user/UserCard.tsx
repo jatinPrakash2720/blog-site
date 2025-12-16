@@ -7,7 +7,10 @@ interface UserCardProps {
 }
 
 const UserCard: React.FC<UserCardProps> = ({ user }) => {
-  const getInitials = (name: string) => {
+  const getInitials = (name: string | undefined | null) => {
+    if (!name || typeof name !== "string") {
+      return user?.username?.[0]?.toUpperCase() || "U";
+    }
     return name
       .split(" ")
       .map((n) => n[0])
@@ -16,21 +19,25 @@ const UserCard: React.FC<UserCardProps> = ({ user }) => {
       .slice(0, 2);
   };
 
+  const displayName = user?.fullName || user?.username || "User";
+
   return (
     <div className="relative group cursor-pointer rounded-lg transition-all duration-200 hover:bg-gray-50 dark:hover:bg-gray-800/50 gap-0">
       {/* Main content */}
       <div className="flex items-center gap-4 bg-background/50 border border-border/50 dark:bg-background/50 rounded-lg p-2 relative z-10 transition-opacity duration-200 group-hover:opacity-0">
         <Avatar className="h-10 w-10 ring-2 ring-border/50 dark:ring-border/50">
-          <AvatarImage src={user.avatar} alt={user.fullName} />
+          <AvatarImage src={user?.avatar} alt={displayName} />
           <AvatarFallback className="text-xs">
-            {getInitials(user.fullName)}
+            {getInitials(user?.fullName)}
           </AvatarFallback>
         </Avatar>
         <div>
           <p className="font-semibold text-base text-foreground">
-            {user.fullName}
+            {displayName}
           </p>
-          <p className="text-sm text-muted-foreground">@{user.username}</p>
+          <p className="text-sm text-muted-foreground">
+            @{user?.username || "user"}
+          </p>
         </div>
       </div>
       {/* Hover overlay with "see profile" text */}

@@ -62,7 +62,6 @@ export interface IAuthContext {
     email: string
   ) => Promise<ApiResponse<{ success: boolean; message: string }>>;
   logout: () => Promise<void>;
-  refreshAuthToken: () => Promise<void>;
   changePassword: (passwordData: ChangePasswordData) => Promise<void>;
   updateAvatar: (avatarData: FormData) => Promise<void>;
   updateCoverImage: (coverImageData: FormData) => Promise<void>;

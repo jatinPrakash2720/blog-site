@@ -30,6 +30,8 @@ const HomePage: React.FC = () => {
         }}
       />
       <Header1 />
+      {/* Spacer for ProfileSetupBanner if it's visible */}
+      <div className="h-0" id="banner-spacer" />
       <div className="relative grow w-full pt-17 pb-20 lg:pb-0">
         <main
           className="container max-w-full mx-auto px-4"

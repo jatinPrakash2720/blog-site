@@ -284,7 +284,7 @@ const Header1: React.FC<Header1Props> = ({
 
   const handleLogout = async () => {
     await logout();
-    navigate("/auth/login");
+    // logout() already navigates to /auth/login, no need to navigate again
   };
 
   const getInitials = (name: string) => {

@@ -5,10 +5,29 @@ export class LocalStorage {
     if (!isBrowser) return null;
     const value = localStorage.getItem(key);
     if (value) {
+      // Handle cases where value is the string "undefined" or "null"
+      if (value === "undefined" || value === '"undefined"') {
+        localStorage.removeItem(key);
+        return null;
+      }
+      if (value === "null" || value === '"null"') {
+        localStorage.removeItem(key);
+        return null;
+      }
       try {
-        return JSON.parse(value);
+        const parsed = JSON.parse(value);
+        // Handle parsed undefined/null values
+        if (parsed === undefined || parsed === null) {
+          return null;
+        }
+        return parsed;
       } catch (error) {
-        console.error("Error parsing JSON from localStorage", error);
+        console.error("Error parsing JSON from localStorage", error, {
+          key,
+          value,
+        });
+        // Remove invalid value from localStorage
+        localStorage.removeItem(key);
         return null;
       }
     }

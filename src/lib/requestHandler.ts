@@ -22,15 +22,28 @@ export const requestHandler = async <T>(
     }
   } catch (error: unknown) {
     const axiosError = error as AxiosErrorResponse;
-    if ([401, 403].includes(axiosError.response?.data?.statusCode || 0)) {
-      // Handle unauthorized access, e.g., redirect to login
-      localStorage.clear();
-      if (isBrowser) window.location.href = "/login";
+    
+    // Token refresh is handled automatically by the interceptor
+    // Only handle definitive auth failures here
+    const statusCode = axiosError.response?.data?.statusCode || 0;
+    const errorMessage = axiosError.response?.data?.message || "";
+    
+    // Only clear auth if refresh token is definitively expired/invalid
+    if ([401, 403].includes(statusCode)) {
+      const isRefreshFailed =
+        errorMessage.includes("Refresh Token Expired") ||
+        errorMessage.includes("Refresh Token Invalid");
+      
+      if (isRefreshFailed && isBrowser) {
+        localStorage.clear();
+        window.location.href = "/auth/login";
+      }
     }
+    
     return onError({
-      message: axiosError.response?.data?.message || "Something went wrong",
+      message: errorMessage || "Something went wrong",
       success: false,
-      statusCode: axiosError.response?.data?.statusCode || 0,
+      statusCode,
     });
   } finally {
     setLoading?.(false);

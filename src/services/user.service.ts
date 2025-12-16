@@ -43,7 +43,7 @@ export const updateProfileImages = (userId: string, imageData: FormData) => {
 };
 
 export const loginUser = (data: LoginData) => {
-  return apiClient.post<ApiResponse<{ user: User; accessToken: string }>>(
+  return apiClient.post<ApiResponse<{ user: User; accessToken: string; refreshToken: string }>>(
     "/users/login",
     data
   );

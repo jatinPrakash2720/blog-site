@@ -48,6 +48,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setCurrentUser(null);
     setIsAuthenticated(false);
     LocalStorage.remove("token");
+    LocalStorage.remove("accessToken");
+    LocalStorage.remove("refreshToken");
     LocalStorage.remove("user");
   }, []);
 
@@ -57,17 +59,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       null,
       (response) => {
         if (!response.data)
-          return { success: false, message: "Refresh Again Please" };
+          return { success: false, message: "No user data found" };
         setCurrentUser(response.data);
         setIsAuthenticated(true);
         LocalStorage.set("user", response.data);
         return response;
       },
       (response) => {
-        if (!response.data)
-          return { success: false, message: "Refresh Again Please" };
-        clearAuthState();
-        navigate("/auth/login");
+        // If error occurs, the interceptor already handled token refresh
+        // If refresh failed, user will be redirected to login by interceptor
+        // Just clear local state here
+        const errorMessage = response.message || "";
+        const isRefreshFailed =
+          errorMessage.includes("Refresh Token Expired") ||
+          errorMessage.includes("Refresh Token Invalid");
+
+        if (isRefreshFailed) {
+          clearAuthState();
+        }
         return response;
       }
     );
@@ -102,15 +111,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             });
 
             const user = response.data;
-            // Extract token from cookies and save to localStorage
+            // Extract token from cookies (OAuth uses httpOnly: false, so accessible)
+            // Note: May not work if backend and frontend are on different domains
             const tokenFromCookie = document.cookie
               .split("; ")
               .find((row) => row.startsWith("accessToken="))
               ?.split("=")[1];
 
-            // Extract token from URL params instead of cookies
+            // Extract token from URL params as fallback
             const urlParams = new URLSearchParams(location.search);
-            const tokenFromUrl = urlParams.get("token");
+            const tokenFromUrl = urlParams.get("accessToken");
 
             console.log("🔑 [Auth] Token extraction:", {
               tokenFromCookie: !!tokenFromCookie,
@@ -119,14 +129,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               urlTokenLength: tokenFromUrl?.length || 0,
             });
 
+            // Prioritize URL params (more reliable), fallback to cookies
             if (tokenFromUrl) {
-              LocalStorage.set("token", tokenFromUrl);
+              LocalStorage.set("accessToken", tokenFromUrl);
               console.log("💾 [Auth] Token saved from URL params");
-            }
-
-            if (tokenFromCookie) {
-              LocalStorage.set("token", tokenFromCookie);
+            } else if (tokenFromCookie) {
+              LocalStorage.set("accessToken", tokenFromCookie);
               console.log("💾 [Auth] Token saved from cookies");
+            } else {
+              console.warn("⚠️ [Auth] No token found in URL params or cookies");
             }
 
             setCurrentUser(user as User);
@@ -151,52 +162,35 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         console.log("📦 [Auth] Regular page load - checking localStorage");
 
         // 2. For ALL other page loads, restore from localStorage
-        const userFromStorage = LocalStorage.get("user") as User;
-        const token = LocalStorage.get("token");
+        const userFromStorage = LocalStorage.get("user");
+        const accessToken = LocalStorage.get("accessToken");
+        const refreshToken = LocalStorage.get("refreshToken");
 
         console.log("🔍 [Auth] LocalStorage check:", {
           hasUser: !!userFromStorage,
-          hasToken: !!token,
-          tokenLength: token?.length || 0,
+          hasAccessToken: !!accessToken,
+          hasRefreshToken: !!refreshToken,
+          accessTokenLength: accessToken?.length || 0,
+          refreshTokenLength: refreshToken?.length || 0,
           userId: userFromStorage?._id,
           username: userFromStorage?.username,
         });
 
-        if (userFromStorage && token) {
-          console.log("✅ [Auth] Valid credentials found, restoring session");
-
+        // Simple check: if user exists in storage, restore session
+        // Token refresh will be handled automatically by interceptor when needed
+        if (userFromStorage && (accessToken || refreshToken)) {
           // Restore user state from localStorage
           setCurrentUser(userFromStorage);
           setIsAuthenticated(true);
 
-          console.log("🔄 [Auth] Starting background token validation...");
-
-          // Optional: Validate token in background (don't block UI)
-          fetchCurrentUser().catch((error) => {
-            console.error("⚠️ [Auth] Background token validation failed:", {
-              error: error.message,
-              status: error.response?.status,
-              statusText: error.response?.statusText,
-              data: error.response?.data,
-            });
-
-            // Only clear auth if it's definitely an auth error
-            if (
-              error.response?.status === 401 ||
-              error.response?.status === 403
-            ) {
-              console.log(
-                "🚫 [Auth] Token invalid (401/403), clearing auth state"
-              );
-              clearAuthState();
-            } else {
-              console.log("ℹ️ [Auth] Non-auth error, keeping session active");
-            }
+          // Optionally validate token in background (non-blocking)
+          fetchCurrentUser().catch(() => {
+            // If validation fails, interceptor will handle refresh or redirect
+            // No need for complex error handling here
           });
         } else {
-          console.log(
-            "❌ [Auth] No valid credentials found, user not authenticated"
-          );
+          // No user or tokens found
+          clearAuthState();
         }
       }
 
@@ -206,7 +200,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
 
     initializeAuth();
-  }, []);
+  }, [clearAuthState, navigate, fetchCurrentUser]);
 
   const continueWithGoogle = () => {
     console.log("Environment variables:");
@@ -236,7 +230,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setLoading,
         (response) => {
           if (!response.data)
-            return { success: false, message: "No sign up data found", data: null };
+            return {
+              success: false,
+              message: "No sign up data found",
+              data: null,
+            };
           navigate("/auth/verify-otp", {
             state: {
               email: response.data.email,
@@ -269,12 +267,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             };
           const { user, accessToken, refreshToken } = response.data;
           if (payload.saveLogin) {
-            LocalStorage.set("token", accessToken);
+            LocalStorage.set("accessToken", accessToken);
             LocalStorage.set("user", user);
             LocalStorage.set("refreshToken", refreshToken);
           } else {
-            LocalStorage.set("token", "");
-            LocalStorage.set("user", "");
+            LocalStorage.remove("accessToken");
+            LocalStorage.remove("refreshToken");
+            LocalStorage.remove("user");
           }
           setCurrentUser(user);
           setIsAuthenticated(true);
@@ -329,7 +328,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       status: number;
       success: boolean;
       message?: string;
-      data?: { user: User; accessToken: string };
+      data?: { user: User; accessToken: string; refreshToken: string };
     }> => {
       return await requestHandler(
         () => userService.loginUser(credentials),
@@ -341,15 +340,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               success: false,
               message: "No login data found",
             };
-          const { user, accessToken } = response.data;
+          const { user, accessToken, refreshToken } = response.data;
           setCurrentUser(user);
           setIsAuthenticated(true);
           if (credentials.saveLogin) {
-            LocalStorage.set("token", accessToken);
+            LocalStorage.set("accessToken", accessToken);
+            LocalStorage.set("refreshToken", refreshToken);
             LocalStorage.set("user", user);
           } else {
-            LocalStorage.set("token", "");
-            LocalStorage.set("user", "");
+            // Remove tokens instead of setting empty strings to avoid parsing issues
+            LocalStorage.remove("accessToken");
+            LocalStorage.remove("refreshToken");
+            LocalStorage.remove("user");
           }
           console.log("response onSuccess :", response);
           navigate("/home");
@@ -365,44 +367,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   );
 
   const logout = useCallback(async () => {
+    // Always clear auth state first to ensure localStorage is cleared
+    clearAuthState();
+
     return await requestHandler(
       () => userService.logoutUser(),
       setLoading,
       (response) => {
-        if (!response.data)
-          return { success: false, message: "No logout data found" };
-        clearAuthState();
+        console.log("response onSuccess :", response);
+        // Auth state already cleared, just navigate
         navigate("/auth/login");
         return response;
       },
       (response) => {
-        if (!response.data)
-          return { success: false, message: "No logout data found" };
-        clearAuthState();
+        console.log("response onError :", response);
+        // Auth state already cleared, just navigate
         navigate("/auth/login");
         return response;
       }
     );
   }, [navigate, clearAuthState]);
-
-  const refreshAuthToken = useCallback(async () => {
-    return await requestHandler(
-      () => userService.refreshAccessToken(),
-      setLoading,
-      (response) => {
-        if (!response.data) return { success: false, message: "No data found" };
-        const { accessToken } = response.data;
-        LocalStorage.set("token", accessToken);
-        fetchCurrentUser();
-      },
-      (response) => {
-        if (!response.data) return { success: false, message: "No data found" };
-        clearAuthState();
-        navigate("/auth/login");
-        return response;
-      }
-    );
-  }, [navigate, clearAuthState, fetchCurrentUser]);
 
   const changePassword = useCallback(
     async (passwordData: ChangePasswordData) => {
@@ -661,7 +645,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     uniqueUsername,
     resendVerifyCode,
     logout,
-    refreshAuthToken,
     changePassword,
     updateAvatar,
     updateCoverImage,

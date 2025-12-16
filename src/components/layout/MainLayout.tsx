@@ -1,6 +1,7 @@
 import React from "react";
 import { Outlet } from "react-router-dom";
 import { Toaster } from "../ui/sonner";
+import ProfileSetupBanner from "../features/user/ProfileSetupBanner";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -15,6 +16,9 @@ interface MainLayoutProps {
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   return (
     <div className="min-h-screen bg-transparent">
+      {/* Profile Setup Banner - shows when user hasn't set avatar or cover image */}
+      <ProfileSetupBanner />
+      
       {/* The main page content (e.g., HomePage) is rendered here. */}
       {children}
       <Toaster />
