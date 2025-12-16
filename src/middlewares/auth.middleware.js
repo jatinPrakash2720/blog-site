@@ -41,9 +41,50 @@ const verifyJWT = asyncHandler(async (req, res, next) => {
     }
   }
 
-  // Check if token exists
-  if (!token) {
-    throw new ApiError(401, "Unauthorized Request: Token not provided");
+  // Log token extraction for debugging
+  console.log("🔑 [Auth Middleware] Token extraction:", {
+    fromCookie: !!req.cookies?.accessToken,
+    fromHeader: !!req.header("Authorization"),
+    tokenLength: token?.length || 0,
+    tokenPreview: token ? token : "no token",
+    tokenIsEmpty:
+      !token || token.trim() === "" || token === '""' || token === "null",
+  });
+
+  // Check if token exists and is valid (not empty string or "null")
+  const isTokenEmpty =
+    !token || token.trim() === "" || token === '""' || token === "null";
+
+  if (isTokenEmpty) {
+    console.log(
+      "⚠️ [Auth Middleware] Token is empty or invalid, checking for refresh token..."
+    );
+
+    // If token is empty/invalid but we have refresh token, try to refresh
+    const refreshToken =
+      req.cookies?.refreshToken ||
+      req.body?.refreshToken ||
+      req.header("X-Refresh-Token") ||
+      req.header("x-refresh-token") ||
+      req.header("Refresh-Token") ||
+      req.header("refresh-token") ||
+      req.get("X-Refresh-Token") ||
+      req.get("x-refresh-token");
+
+    if (refreshToken) {
+      console.log(
+        "🔄 [Auth Middleware] Empty/invalid access token, attempting refresh..."
+      );
+      // Skip token verification and go directly to refresh logic
+      // We'll create a fake expired error to trigger refresh flow
+      const fakeError = new jwt.TokenExpiredError(
+        "Token is empty/invalid, attempting refresh",
+        new Date()
+      );
+      throw fakeError;
+    } else {
+      throw new ApiError(401, "Unauthorized Request: Token not provided");
+    }
   }
 
   // Clean the token (remove whitespace)
@@ -93,6 +134,45 @@ const verifyJWT = asyncHandler(async (req, res, next) => {
     // Handle JWT-specific errors
     // IMPORTANT: Check TokenExpiredError FIRST before JsonWebTokenError
     // because TokenExpiredError extends JsonWebTokenError
+
+    // Handle malformed/invalid tokens - try to refresh if refresh token is available
+    if (
+      error instanceof jwt.JsonWebTokenError &&
+      error.message === "jwt malformed"
+    ) {
+      console.log(
+        "⚠️ [Auth Middleware] JWT malformed, checking for refresh token..."
+      );
+
+      // Check for refresh token
+      let refreshToken =
+        req.cookies?.refreshToken ||
+        req.body?.refreshToken ||
+        req.header("X-Refresh-Token") ||
+        req.header("x-refresh-token") ||
+        req.header("Refresh-Token") ||
+        req.header("refresh-token") ||
+        req.get("X-Refresh-Token") ||
+        req.get("x-refresh-token");
+
+      if (refreshToken) {
+        console.log(
+          "🔄 [Auth Middleware] Malformed access token, attempting refresh with refresh token..."
+        );
+        // Fall through to refresh logic (will be handled below)
+        // We'll treat this like an expired token and try to refresh
+        error = new jwt.TokenExpiredError(
+          "Token is malformed, attempting refresh",
+          new Date()
+        );
+      } else {
+        throw new ApiError(
+          401,
+          "Invalid Access Token: Token format is invalid"
+        );
+      }
+    }
+
     if (error instanceof jwt.TokenExpiredError) {
       console.log("⏰ [Auth Middleware] Token expired, attempting refresh...");
       try {
@@ -125,6 +205,13 @@ const verifyJWT = asyncHandler(async (req, res, next) => {
         });
 
         if (!refreshToken) {
+          // Clear cookies if no refresh token found
+          console.log(
+            "❌ [Auth Middleware] No refresh token found, clearing cookies"
+          );
+          res.clearCookie("accessToken", cookieOptions);
+          res.clearCookie("refreshToken", cookieOptions);
+
           throw new ApiError(
             401,
             `Access Token Expired: Token expired at ${new Date(error.expiredAt).toISOString()}. No refresh token found to renew access.`
@@ -141,20 +228,37 @@ const verifyJWT = asyncHandler(async (req, res, next) => {
 
         // Verify the refresh token
         let decodedRefreshToken;
+        console.log("🔑 [Auth Middleware] Refresh token:", refreshToken);
         try {
           decodedRefreshToken = jwt.verify(
             refreshToken,
             process.env.REFRESH_TOKEN_SECRET
           );
+          console.log(
+            "🔑 [Auth Middleware] Decoded refresh token:",
+            decodedRefreshToken
+          );
         } catch (refreshError) {
           // Handle refresh token verification errors
           if (refreshError instanceof jwt.JsonWebTokenError) {
+            // Clear cookies on invalid refresh token
+            console.log(
+              "❌ [Auth Middleware] Refresh token invalid, clearing cookies"
+            );
+            res.clearCookie("accessToken", cookieOptions);
+            res.clearCookie("refreshToken", cookieOptions);
             throw new ApiError(
               401,
               "Refresh Token Invalid: Token signature verification failed"
             );
           }
           if (refreshError instanceof jwt.TokenExpiredError) {
+            // Clear cookies on expired refresh token
+            console.log(
+              "❌ [Auth Middleware] Refresh token expired, clearing cookies"
+            );
+            res.clearCookie("accessToken", cookieOptions);
+            res.clearCookie("refreshToken", cookieOptions);
             throw new ApiError(
               401,
               `Refresh Token Expired: Token expired at ${new Date(refreshError.expiredAt).toISOString()}`
@@ -166,6 +270,12 @@ const verifyJWT = asyncHandler(async (req, res, next) => {
               `Refresh Token Not Yet Valid: Token will be valid from ${new Date(refreshError.date).toISOString()}`
             );
           }
+          // Clear cookies on other refresh token errors
+          console.log(
+            "❌ [Auth Middleware] Refresh token invalid, clearing cookies"
+          );
+          res.clearCookie("accessToken", cookieOptions);
+          res.clearCookie("refreshToken", cookieOptions);
           throw new ApiError(401, "Refresh Token Invalid");
         }
 
@@ -187,13 +297,39 @@ const verifyJWT = asyncHandler(async (req, res, next) => {
         const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
           await generateAccessAndRefreshToken(decodedRefreshToken._id);
 
+        console.log("🔄 [Auth Middleware] New tokens generated:", {
+          newAccessToken: newAccessToken,
+          newAccessTokenLength: newAccessToken?.length || 0,
+          newRefreshToken: newRefreshToken,
+          newRefreshTokenLength: newRefreshToken?.length || 0,
+          userId: decodedRefreshToken._id,
+          timestamp: new Date().toISOString(),
+        });
+
         // Set new tokens in cookies (for cookie-based auth)
+        console.log("🍪 [Auth Middleware] Setting cookies with options:", {
+          cookieOptions: cookieOptions,
+          accessTokenLength: newAccessToken?.length || 0,
+          refreshTokenLength: newRefreshToken?.length || 0,
+        });
+
         res.cookie("accessToken", newAccessToken, cookieOptions);
         res.cookie("refreshToken", newRefreshToken, cookieOptions);
+
+        console.log("✅ [Auth Middleware] Cookies set successfully:", {
+          accessTokenCookieSet: true,
+          refreshTokenCookieSet: true,
+          cookieOptions: cookieOptions,
+        });
 
         // Also set tokens in response headers so frontend can update localStorage
         res.setHeader("X-New-Access-Token", newAccessToken);
         res.setHeader("X-New-Refresh-Token", newRefreshToken);
+
+        console.log("📤 [Auth Middleware] Response headers set:", {
+          xNewAccessTokenHeader: true,
+          xNewRefreshTokenHeader: true,
+        });
 
         // Find user by ID from refresh token (we already validated the user exists)
         const refreshedUser = await User.findById(
@@ -212,6 +348,13 @@ const verifyJWT = asyncHandler(async (req, res, next) => {
         next();
         return;
       } catch (refreshError) {
+        // If refresh fails, clear cookies before throwing error
+        console.log(
+          "❌ [Auth Middleware] Token refresh failed, clearing cookies"
+        );
+        res.clearCookie("accessToken", cookieOptions);
+        res.clearCookie("refreshToken", cookieOptions);
+
         // If refresh fails, throw the original expired error or refresh error
         if (refreshError instanceof ApiError) {
           throw refreshError;

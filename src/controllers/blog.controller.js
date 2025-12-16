@@ -15,6 +15,7 @@ import {
   generateExcerpt,
   generateSlug,
 } from "../utils/genSlugAndExcerpt.utils.js";
+import { generateTipTapContent } from "../utils/generateBlogContent.util.js";
 
 const getBlogs = asyncHandler(async (req, res) => {
   try {
@@ -138,13 +139,123 @@ const getSearchedBlog = asyncHandler(async (req, res) => {
   if (!blog) {
     throw new ApiError(404, "Blog post not found");
   }
-  console.log("blog :",blog)
+
   if (!blog.isPublished || blog.isDeleted) {
     throw new ApiError(404, "Blog not found or not accessible");
   }
-  
+
+  // Check if content is empty or missing
+  let contentIsEmpty = false;
+
+  if (
+    !blog.content ||
+    (typeof blog.content === "string" && blog.content.trim() === "")
+  ) {
+    contentIsEmpty = true;
+  } else if (typeof blog.content === "string") {
+    try {
+      // Try to parse as JSON to check if it's valid TipTap content
+      const parsed = JSON.parse(blog.content);
+      // Check if it's an empty object or invalid structure
+      if (
+        !parsed ||
+        !parsed.type ||
+        parsed.type !== "doc" ||
+        !parsed.content ||
+        parsed.content.length === 0
+      ) {
+        contentIsEmpty = true;
+      }
+    } catch (e) {
+      // If not valid JSON, consider it empty
+      contentIsEmpty = true;
+    }
+  } else if (typeof blog.content === "object") {
+    // If it's already an object, check structure
+    if (
+      !blog.content.type ||
+      blog.content.type !== "doc" ||
+      !blog.content.content ||
+      blog.content.content.length === 0
+    ) {
+      contentIsEmpty = true;
+    }
+  }
+
+  // If content is empty, generate it using OpenAI
+  if (contentIsEmpty) {
+    console.log(
+      "📝 [Blog] Content is empty, generating content with OpenAI..."
+    );
+
+    const openaiApiKey = process.env.OPENAI_API_KEY;
+
+    if (!openaiApiKey) {
+      console.warn(
+        "⚠️ [Blog] OpenAI API key not configured, skipping content generation"
+      );
+      // Return blog without content if API key is not configured
+      blog.views = (blog.views || 0) + 1;
+      await blog.save({ validateBeforeSave: false });
+      return res
+        .status(200)
+        .json(
+          new ApiResponse(
+            200,
+            blog,
+            "Blog fetched Successfully (content generation skipped)"
+          )
+        );
+    }
+
+    try {
+      // Generate TipTap-formatted content
+      const generatedContent = await generateTipTapContent(
+        blog.title,
+        blog.excerpt || "",
+        openaiApiKey
+      );
+
+      console.log("📝 [Blog] Generated content preview:", {
+        hasContent: !!generatedContent,
+        contentType: typeof generatedContent,
+        contentKeys: generatedContent ? Object.keys(generatedContent) : [],
+        contentLength: generatedContent?.content?.length || 0,
+      });
+
+      // Convert to string and save to database
+      blog.content = JSON.stringify(generatedContent);
+      await blog.save({ validateBeforeSave: false });
+
+      console.log("✅ [Blog] Content generated and saved successfully", {
+        contentLength: blog.content?.length || 0,
+        contentPreview: blog.content?.substring(0, 100) || "empty",
+      });
+
+      // Reload blog from database to ensure we have the latest data
+      blog = await Blog.findById(blogId);
+    } catch (error) {
+      console.error("❌ [Blog] Failed to generate content:", error);
+      console.error("❌ [Blog] Error details:", {
+        message: error.message,
+        stack: error.stack,
+      });
+      // Continue with empty content if generation fails
+      // Don't throw error, just log it
+    }
+  }
+
   blog.views = (blog.views || 0) + 1;
   await blog.save({ validateBeforeSave: false });
+
+  // Final check before returning
+  console.log("📤 [Blog] Returning blog response:", {
+    blogId: blog._id,
+    hasContent: !!blog.content,
+    contentType: typeof blog.content,
+    contentLength: blog.content?.length || 0,
+    contentIsEmpty: !blog.content || blog.content.trim() === "",
+  });
 
   return res
     .status(200)

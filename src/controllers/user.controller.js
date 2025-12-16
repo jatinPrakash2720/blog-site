@@ -209,11 +209,15 @@ const loginUser = asyncHandler(async (req, res) => {
   loggedinuser ki details bej denge
   aur cookies mein kr denge, with options
   */
-  const { identifier, password } = req.body;
+  const { identifier, password, saveLogin } = req.body;
   console.log("identifier :", identifier);
   console.log("password :", password);
+  console.log("saveLogin :", saveLogin);
   if (!identifier) {
     throw new ApiError(400, "email is required");
+  }
+  if (!password) {
+    throw new ApiError(400, "password is required");
   }
   const user = await User.findOne({
     $or: [{ email: identifier }, { username: identifier }],
@@ -250,10 +254,6 @@ const loginUser = asyncHandler(async (req, res) => {
   if (!isPasswordValid) {
     throw new ApiError(401, "Password not matched");
   }
-
-  const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
-    user._id
-  );
   const {
     _id,
     username: userUsername,
@@ -265,39 +265,60 @@ const loginUser = asyncHandler(async (req, res) => {
     createdAt,
     updatedAt,
   } = user.toObject();
-  // const loggedInUser = await User.findById(user._id).select(
-  //   "-password -refreshToken"
-  // );
-
-  // const option = {
-  //   httpOnly: true,
-  //   secure: true,
-  // };
-  return res
-    .status(200)
-    .cookie("accessToken", accessToken, option)
-    .cookie("refreshToken", refreshToken, option)
-    .json(
-      new ApiResponse(
-        200,
-        {
-          user: {
-            _id,
-            username: userUsername,
-            email: userEmail,
-            fullName,
-            avatar,
-            coverImage,
-            bio,
-            createdAt,
-            updatedAt,
+  const { accessToken: newAccessToken, refreshToken: newRefreshToken } = await generateAccessAndRefreshToken(
+    user._id
+  );
+  if (saveLogin) {
+    return res
+      .status(200)
+      .cookie("accessToken", newAccessToken, option)
+      .cookie("refreshToken", newRefreshToken, option)
+      .json(
+        new ApiResponse(
+          200,
+          {
+            user: {
+              _id,
+              username: userUsername,
+              email: userEmail,
+              fullName,
+              avatar,
+              coverImage,
+              bio,
+              createdAt,
+              updatedAt,
+            },
+            accessToken: newAccessToken,
+            refreshToken: newRefreshToken,
           },
-          accessToken: accessToken,
-          refreshToken: refreshToken,
-        },
-        "User logged in Successfully"
-      )
-    );
+          "User logged in Successfully with saving login"
+        )
+      );
+  } else {
+    return res
+      .status(200)
+      .cookie("accessToken", newAccessToken, option)
+      .cookie("refreshToken", newRefreshToken, option)
+      .json(
+        new ApiResponse(
+          200,
+          {
+            user: {
+              _id,
+              username: userUsername,
+              email: userEmail,
+              fullName,
+              avatar,
+              coverImage,
+              bio,
+              createdAt,
+              updatedAt,
+            },
+          },
+          "User logged in Successfully without saving login"
+        )
+      );
+  }
 });
 const logoutUser = asyncHandler(async (req, res) => {
   try {
